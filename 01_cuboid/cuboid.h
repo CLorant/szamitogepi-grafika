@@ -1,11 +1,13 @@
-#ifndef CIRCLE_H
-#define CIRCLE_H
+#ifndef CUBOID_H
+#define CUBOID_H
 
-typedef struct Brick {
-    double length;
-    double width;
-    double height;
-} Brick;
+typedef struct Cuboid {
+    float length;
+    float width;
+    float height;
+} Cuboid;
+
+void get_positive_float(const char *prompt, float *value);
 
 void set_size(Cuboid* cuboid);
 
