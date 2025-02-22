@@ -1,4 +1,4 @@
-## 2. gyakorlati feladat: Téglatestek
+## 1. gyakorlati feladat: Téglatestek
 
 Téglatest struktúra
 ```c
