@@ -10,7 +10,7 @@
 void get_positive_float(const char *prompt, float *value) {
     printf("%s", prompt);
     while (scanf("%f", value) != 1 || *value <= 0) {
-        printf("%s", ERROR_MSG);
+        perror(ERROR_MSG);
         while (getchar() != '\n');
         printf("%s", prompt);
     }
