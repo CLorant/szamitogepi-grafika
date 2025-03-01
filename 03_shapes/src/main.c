@@ -1,13 +1,9 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
-
-#include "sdl/sdl_utils.h"
-#include "sdl/drawing.h"
-#include "sdl/event_handler.h"
-#include "sdl/consts.h"
-
-#include "shapes/line.h"
-#include "shapes/rectangle.h"
+#include "core/sdl_utils.h"
+#include "core/drawing.h"
+#include "core/event_handler.h"
+#include "core/consts.h"
 
 #define DEFAULT_MODE MODE_LINE
 #define DEFAULT_COLOR {255, 0, 0}

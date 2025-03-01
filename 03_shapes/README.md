@@ -22,25 +22,26 @@ Ez a program egy egyszerű rajzolóeszköz, amely lehetővé teszi a felhasznál
 ### Dokumentáció
 A ```.h``` fájlokban találhatóak hosszabb leírások, viszont ahol szükséges ott a ```.c``` fájlokban is találhatóak rövid kommentek.
 
-
+**/src:**
 - ```main.c:``` A program kezdőpontja
 
-**/sdl:**
+**src/core:**
 
-- ```consts.h:``` A programban használt konstansokat, globális változókat tartalmazza 
 - ```drawing.c:``` Alakzatok rajzolása, előnézetesen is
 - ```event_handler.c:``` Alakzat létrehozás, egér és billenytűzet kezelés
 - ```palette.c:``` RGB színpaletta, kattintással választható szín
 - ```sdl_utils.c:``` SDL inicializálása és takarítása
 
-**/shapes:**
+**src/shapes:**
 
 - ```line.c:``` Vonal beállítása és veremkezelése
 - ```rectangle.c:``` Téglalap beállítása és veremkezelése
 - ```circle.c:``` Kör beállítása és veremkezelése
 
-**/structs:**
+**include/core:**
+- ```consts.h:``` A programban használt konstansokat, globális változókat tartalmazza 
 
+**include/structs:**
 - ```draw_mode.h:``` Rajzolási módok
 - ```draw_state.h:``` Rajzolási állapotok
 - ```shape_type.h:``` Alakzat típusát meghatározó állapotok

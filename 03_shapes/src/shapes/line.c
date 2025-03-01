@@ -1,5 +1,5 @@
-#include "line.h"
-#include "sdl/consts.h"
+#include "shapes/line.h"
+#include "core/consts.h"
 
 void set_line(Line* line, Point p1, Point p2, Color color) {
     line->p1 = p1;

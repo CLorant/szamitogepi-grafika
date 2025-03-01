@@ -5,6 +5,7 @@
 #include "structs/line_struct.h"
 #include "structs/rect_struct.h"
 #include "structs/circle_struct.h"
+#include "structs/draw_mode.h"
 
 // Téglalapok rajzolása
 void draw_rects(Rectangle* stack, int stack_pointer, SDL_Renderer* renderer);

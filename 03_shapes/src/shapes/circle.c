@@ -1,5 +1,5 @@
-#include "circle.h"
-#include "sdl/consts.h"
+#include "shapes/circle.h"
+#include "core/consts.h"
 
 void set_circle(Circle* circle, Point center, float radius, Color color) {
     circle->center = center;

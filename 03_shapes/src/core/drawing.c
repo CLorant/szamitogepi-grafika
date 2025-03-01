@@ -1,13 +1,11 @@
 #include <math.h>
-
-#include "structs/draw_state.h"
-#include "structs/draw_mode.h"
 #include "drawing.h"
+#include "palette.h"
 #include "consts.h"
+#include "structs/draw_state.h"
 #include "shapes/line.h"
 #include "shapes/rectangle.h"
 #include "shapes/circle.h"
-#include "palette.h"
 
 Line line_stack[MAX_LINE_COUNT];
 int line_stack_pointer = -1;

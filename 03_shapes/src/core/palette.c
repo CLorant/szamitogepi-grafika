@@ -1,5 +1,5 @@
-#include "palette.h"
 #include <stdio.h>
+#include "palette.h"
 
 void draw_palette(SDL_Renderer* renderer) {
     for (int x = 0; x < PALETTE_WIDTH; x++) {

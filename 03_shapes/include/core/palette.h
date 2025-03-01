@@ -3,8 +3,8 @@
 
 #include <SDL2/SDL.h>
 #include <stdbool.h>
-#include "structs/color.h"
 #include "consts.h"
+#include "structs/color.h"
 
 // Paletta szélessége és magassága
 #define PALETTE_WIDTH 300
