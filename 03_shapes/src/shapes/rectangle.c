@@ -1,4 +1,5 @@
 #include "rectangle.h"
+#include "sdl/consts.h"
 
 void set_rect(Rectangle* rect, Point p1, Point p2, Color color) {
     rect->p1 = p1;

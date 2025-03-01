@@ -1,11 +1,6 @@
 #include "palette.h"
 #include <stdio.h>
 
-#define PALETTE_WIDTH 300
-#define PALETTE_HEIGHT 300
-#define PALETTE_X (SCREEN_WIDTH - PALETTE_WIDTH - 10) 
-#define PALETTE_Y (SCREEN_HEIGHT - PALETTE_HEIGHT - 10) 
-
 void draw_palette(SDL_Renderer* renderer) {
     for (int x = 0; x < PALETTE_WIDTH; x++) {
         for (int y = 0; y < PALETTE_HEIGHT; y++) {
@@ -32,6 +27,6 @@ void get_color_from_palette(Color* color, int mx, int my) {
         color->g = ((my - PALETTE_Y) * 255) / PALETTE_HEIGHT;
         color->b = 255 - (((mx - PALETTE_X) * 255) / PALETTE_WIDTH);
 
-        printf("Választott szín - R: %d, G: %d, B: %d\n", color->r, color->g, color->b);
+        printf(MSG_PICKED_COLOR, color->r, color->g, color->b);
     }
 }

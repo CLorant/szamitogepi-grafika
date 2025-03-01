@@ -4,6 +4,7 @@
 #include "point.h"
 #include "color.h"
 
+// Téglalap struktúra (sarokpontok, szín)
 typedef struct Rectangle {
     Point p1, p2;
     Color color;
