@@ -1,6 +1,8 @@
 #ifndef BALL_H
 #define BALL_H
 
+#include <stdbool.h>
+
 /**
  * Ball position and speed
  */
@@ -16,7 +18,7 @@ typedef struct Ball
 /**
  * Move the ball to the given position.
  */
-void init_ball(Ball* ball, float x, float y);
+void init_ball(Ball* ball, float x, float y, bool rev_direction);
 
 /**
  * Update the ball.

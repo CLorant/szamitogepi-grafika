@@ -4,13 +4,13 @@
 
 #include <math.h>
 
-void init_ball(Ball* ball, float x, float y)
+void init_ball(Ball* ball, float x, float y, bool rev_direction)
 {
     ball->x = x;
     ball->y = y;
     ball->radius = 50;
-    ball->speed_x = 200;    // Eredeti sebesség: 100 
-    ball->speed_y = 200;    // Eredeti sebesség: 100 
+    ball->speed_x = rev_direction ? 200 : -200;    // Eredeti sebesség: 100 
+    ball->speed_y = rev_direction ? 200 : -200;    // Eredeti sebesség: 100 
 }
 
 void update_ball(Ball* ball, double time)
