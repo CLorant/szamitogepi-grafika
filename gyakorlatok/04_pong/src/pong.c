@@ -6,7 +6,7 @@ void init_pong(Pong* pong, int width, int height)
     pong->height = height;
     init_pad(&(pong->left_pad), 0, height, RED_THEME);
     init_pad(&(pong->right_pad), width - 50, height, GREEN_THEME);
-    init_ball(&(pong->ball), width / 2, height / 2, false);
+    init_ball(&(pong->ball), width / 2, height / 2);
 }
 
 void update_pong(Pong* pong, double time)
@@ -64,12 +64,12 @@ void bounce_ball(Pong* pong) {
 
     if (ball_misses_left) {
         pong->right_score++;
-        init_ball(ball, pong->width / 2, pong->height / 2, true);
+        reset_ball(ball, true);
         return;
     }
     if (ball_misses_right) {
         pong->left_score++;
-        init_ball(ball, pong->width / 2, pong->height / 2, false);
+        reset_ball(ball, false);
         return;
     }
 

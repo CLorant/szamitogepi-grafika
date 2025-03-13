@@ -47,10 +47,16 @@ void handle_game_events(Game* game)
                 game->is_running = false;
                 break;
             case SDL_SCANCODE_W:
-                set_left_pad_speed(&(game->pong), -100);
+                set_left_pad_speed(&(game->pong), -200);
                 break;
             case SDL_SCANCODE_S:
-                set_left_pad_speed(&(game->pong), +100);
+                set_left_pad_speed(&(game->pong), +200);
+                break;
+            case SDL_SCANCODE_1:
+                decrease_ball_radi(&(game->pong.ball));
+                break;
+            case SDL_SCANCODE_2:
+                increase_ball_radi(&(game->pong.ball));
                 break;
             default:
                 break;
@@ -65,6 +71,10 @@ void handle_game_events(Game* game)
             default:
                 break;
             }
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            SDL_GetMouseState(&x, &y);
+            move_ball(&(game->pong.ball), x, y);
             break;
         case SDL_MOUSEMOTION:
             SDL_GetMouseState(&x, &y);
