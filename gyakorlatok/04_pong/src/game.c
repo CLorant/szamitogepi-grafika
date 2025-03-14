@@ -1,8 +1,10 @@
-#include "game.h"
-
 #include <GL/gl.h>
-
+#include <SDL2/SDL.h>
 #include <stdio.h>
+#include "game.h"
+#include "text.h"
+
+const int LEFT_PAD_SPEED = 400;
 
 void init_game(Game* game, int width, int height)
 {
@@ -14,6 +16,17 @@ void init_game(Game* game, int width, int height)
     }
     init_opengl(game);
     init_pong(&(game->pong), width, height);
+
+    Texture font_texture;
+    font_texture.font_texture_id = load_texture("assets/textures/charmap.bmp");
+    if (font_texture.font_texture_id == 0) {
+        printf("Failed to load font texture!\n");
+        return;
+    }
+
+    init_font_texture_coords(&font_texture);
+    game->font_texture = font_texture; 
+
     game->is_running = true;
 }
 
@@ -27,15 +40,16 @@ void destroy_game(Game* game)
         SDL_DestroyWindow(game->window);
     }
 
+    if (game->font_texture.font_texture_id != 0) {
+        glDeleteTextures(1, &game->font_texture.font_texture_id);
+    }
+
     SDL_Quit();
 }
 
 void handle_game_events(Game* game)
 {
     SDL_Event event;
-    static bool is_mouse_down = false;
-    static int mouse_x = 0;
-    static int mouse_y = 0;
     int x;
     int y;
 
@@ -47,10 +61,10 @@ void handle_game_events(Game* game)
                 game->is_running = false;
                 break;
             case SDL_SCANCODE_W:
-                set_left_pad_speed(&(game->pong), -200);
+                set_left_pad_speed(&(game->pong), -LEFT_PAD_SPEED);
                 break;
             case SDL_SCANCODE_S:
-                set_left_pad_speed(&(game->pong), +200);
+                set_left_pad_speed(&(game->pong), LEFT_PAD_SPEED);
                 break;
             case SDL_SCANCODE_1:
                 decrease_ball_radi(&(game->pong.ball));
@@ -104,7 +118,7 @@ void update_game(Game* game)
 void render_game(Game* game)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    render_pong(&(game->pong));
+    render_pong(&(game->pong), &(game->font_texture));
     SDL_GL_SwapWindow(game->window);
 }
 

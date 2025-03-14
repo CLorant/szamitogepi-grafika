@@ -1,4 +1,12 @@
+#include <GL/gl.h>
+#include <stdio.h>
+#include <string.h>
 #include "pong.h"
+#include "text.h"
+
+const float BALL_ROTATION_SPEED_CHANGE = 50.0f;
+const float BALL_SPEED_Y_FACTOR = 2.0f;
+const float BALL_SPEED_Y_OFFSET = 0.5f;
 
 void init_pong(Pong* pong, int width, int height)
 {
@@ -7,6 +15,8 @@ void init_pong(Pong* pong, int width, int height)
     init_pad(&(pong->left_pad), 0, height, RED_THEME);
     init_pad(&(pong->right_pad), width - 50, height, GREEN_THEME);
     init_ball(&(pong->ball), width / 2, height / 2);
+    pong->left_score = 0;
+    pong->right_score = 0;
 }
 
 void update_pong(Pong* pong, double time)
@@ -17,11 +27,21 @@ void update_pong(Pong* pong, double time)
     bounce_ball(pong);
 }
 
-void render_pong(Pong* pong)
+void render_pong(Pong* pong, Texture* texture)
 {
     render_pad(&(pong->left_pad));
     render_pad(&(pong->right_pad));
     render_ball(&(pong->ball));
+
+    char score_text[50];
+    sprintf(score_text, "%d - %d", pong->left_score, pong->right_score);
+
+    int text_length = strlen(score_text);
+    float text_width = text_length * 32;
+
+    float start_x = (pong->width - text_width) / 2;
+
+    render_text(texture, start_x, 20, score_text);
 }
 
 void set_left_pad_position(Pong* pong, float position)
@@ -76,20 +96,23 @@ void bounce_ball(Pong* pong) {
     if (ball_hits_left_pad) {
         ball->x = left_pad->x + left_pad->width + ball->radius;
         ball->speed_x *= -1;
+        ball->rotation_speed += BALL_ROTATION_SPEED_CHANGE;
 
         hit_position = (ball->y - left_pad->y) / left_pad->height;
-        ball->speed_y += (hit_position - 0.5f) * 2.0f;
+        ball->speed_y += (hit_position - BALL_SPEED_Y_OFFSET) * BALL_SPEED_Y_FACTOR;
     }
     if (ball_hits_right_pad) {
         ball->x = right_pad->x - ball->radius;
         ball->speed_x *= -1;
+        ball->rotation_speed -= BALL_ROTATION_SPEED_CHANGE;
 
         hit_position = (ball->y - right_pad->y) / right_pad->height;
-        ball->speed_y += (hit_position - 0.5f) * 2.0f;
+        ball->speed_y += (hit_position - BALL_SPEED_Y_OFFSET) * BALL_SPEED_Y_FACTOR;
     }
 
     if (ball_hits_top || ball_hits_bottom) {
         ball->speed_y *= -1;
         ball->y = ball_hits_top ? ball->radius : pong->height - ball->radius;
+        ball->rotation_speed *= -1;
     }
 }

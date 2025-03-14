@@ -3,6 +3,7 @@
 
 #include "ball.h"
 #include "pad.h"
+#include "text.h"
 
 #include <stdbool.h>
 
@@ -33,7 +34,7 @@ void update_pong(Pong* pong, double time);
 /**
  * Render the pong game.
  */
-void render_pong(Pong* pong);
+void render_pong(Pong* pong, Texture* texture);
 
 /**
  * Move the left pad to the given position.

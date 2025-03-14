@@ -5,6 +5,9 @@
  */
 int main(int argc, char* argv[])
 {
+    (void)argc;
+    (void)argv;
+
     Game game;
 
     init_game(&game, 800, 600);

@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "pong.h"
+#include "text.h"
 
 #include <SDL2/SDL.h>
 
@@ -12,6 +13,7 @@ typedef struct Game
 {
     SDL_Window* window;
     SDL_GLContext gl_context;
+    Texture font_texture;
     bool is_running;
     double last_update_time;
     int width;
