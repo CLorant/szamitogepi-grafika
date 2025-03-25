@@ -19,7 +19,7 @@ Ez a program Piller Imre "Pong" példa programjának egy módosított verziója,
 
 ### Fordítás és Futtatás
 ```bash
-make && origin.exe
+make && pong.exe
 ```
 
 ### Dokumentáció
