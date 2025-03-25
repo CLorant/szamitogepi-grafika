@@ -9,13 +9,16 @@ Ez a program Piller Imre "Origin" példa programjának egy módosított verziój
 - Színes háromszög elhelyezve
 - Alacsony tesszalált szürke gömb elhelyezve
 - Gömb forgatás implementálva
-- Google Maps-hez hasonló kamera mozgatás (WIP)
+- Google Maps-hez hasonló kamera mozgatásra váltás `m` billenyűvel:
+    - Bal egér gomb lenyomva tartásával lehet az origó körül forgatni a kamerát
+    - Közelítés / Távolodás `q` és `e` billentyűkkel
 - Sakktábla minta elhelyezve a koordináta rendszer alján
 - Henger és kúp közelítések elhelyezve
 
-### Futtatás
-- `make` parancs használata fordításhoz
-- `shapes.exe` vagy `./shapes` futtatáshoz
+### Fordítás és Futtatás
+```bash
+make && origin.exe
+```
 
 ### Dokumentáció
 

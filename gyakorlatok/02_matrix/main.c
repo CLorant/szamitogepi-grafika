@@ -2,8 +2,6 @@
 
 #include <stdio.h>
 
-
-
 int main(void) {
     printf("\nMatrices, matrix transformations\n\n");
     int matrix[N][N];

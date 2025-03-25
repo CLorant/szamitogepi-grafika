@@ -116,17 +116,38 @@ void handle_app_events(App* app)
             case SDL_SCANCODE_D:
                 set_camera_side_speed(&(app->camera), -1);
                 break;
+            case SDL_SCANCODE_M:
+                app->camera.is_orbital = !app->camera.is_orbital;
+                break;
             case SDL_SCANCODE_Q:
-                set_camera_vertical_speed(&(app->camera), 1);
+                if (app->camera.is_orbital) {
+                    app->camera.orbital_radius -= 0.1;
+
+                    if (app->camera.orbital_radius < 1.0) {
+                        app->camera.orbital_radius = 1.0;
+                    }
+                }
+                else {
+                    set_camera_vertical_speed(&(app->camera), 1);
+                }
                 break;
             case SDL_SCANCODE_E:
-                set_camera_vertical_speed(&(app->camera), -1);
+                if (app->camera.is_orbital) {
+                    app->camera.orbital_radius += 0.1;
+
+                    if (app->camera.orbital_radius > 10.0) {
+                        app->camera.orbital_radius = 10.0;
+                    }
+                }
+                else {
+                    set_camera_vertical_speed(&(app->camera), -1);
+                }
                 break;
             case SDL_SCANCODE_J:
-                app->camera.rotation_speed.y = -10;
+                rotate_camera(&(app->camera), -1, 0);
                 break;
             case SDL_SCANCODE_L:
-                app->camera.rotation_speed.y = 10;
+                rotate_camera(&(app->camera), 1, 0);
                 break;
             default:
                 break;
@@ -148,7 +169,7 @@ void handle_app_events(App* app)
                 break;
             case SDL_SCANCODE_J:
             case SDL_SCANCODE_L:
-                    app->camera.rotation_speed.y = 0;
+                set_camera_speed(&(app->camera), 0);
                     break;
             default:
                 break;

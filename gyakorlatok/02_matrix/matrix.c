@@ -5,7 +5,7 @@
 #include <string.h>
 #include <math.h>
 
-const char* ERROR_MSG_INPUT = "Hiba a bemenet olvasásakor! (ENTER - újrapróbálkozás, CTRL + C - kilépés)\n";
+const char* ERROR_MSG_INPUT = "Error reading input! (ENTER - retry, CTRL + C - exit)\n";
 
 void get_positive_int(const char *prompt, int *value) {
     printf("%s", prompt);

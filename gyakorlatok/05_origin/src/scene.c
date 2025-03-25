@@ -147,7 +147,7 @@ void draw_cylinder(float radius, float height, int segments)
 
     glBegin(GL_TRIANGLE_FAN);
 
-    glColor3f(0.9f, 0.3f, 0.3f);
+    glColor3f(1, 0, 0);
     glVertex3f(0, 0, height);
 
     for(int i = 0; i <= segments; i++) {
@@ -177,7 +177,7 @@ void draw_cone(float radius, float height, int segments)
     
     glBegin(GL_TRIANGLE_FAN);
 
-    glColor3f(0.3f, 0.9f, 0.3f);
+    glColor3f(0, 1, 0);
     glVertex3f(0, 0, 0);
 
     for(int i = 0; i <= segments; i++) {

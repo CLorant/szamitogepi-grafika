@@ -11,9 +11,9 @@ A programmal több ponton vagy mátrixon való művelet végezhető el.
 - Két mátrix szorzása
 - Homogén pont transzformációja
 - Transzformációs mátrix:
-- - Skálázása
-- - Eltolása
-- - Forgatása
+    - Skálázása
+    - Eltolása
+    - Forgatása
 - Veremkezelés
 
 ### Fordítás és Futtatás

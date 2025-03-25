@@ -17,9 +17,10 @@ Ez a program Piller Imre "Pong" példa programjának egy módosított verziója,
 
 **Megjegyzés:** A pontszámok megjelenítése nem használ külön könyvtárt (viszont az SDL2 és GL könyvtárak előfeltételek a program futtatásához)
 
-### Futtatás
-- ```make``` parancs használata fordításhoz
-- ```shapes.exe``` vagy ```./shapes``` futtatáshoz
+### Fordítás és Futtatás
+```bash
+make && origin.exe
+```
 
 ### Dokumentáció
 

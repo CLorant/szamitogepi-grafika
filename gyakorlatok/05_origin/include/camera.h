@@ -2,16 +2,18 @@
 #define CAMERA_H
 
 #include "utils.h"
+#include <stdbool.h>
 
 /**
  * Camera, as a moving point with direction
  */
-typedef struct Camera
-{
+typedef struct Camera {
     vec3 position;
     vec3 rotation;
     vec3 speed;
     vec3 rotation_speed;
+    bool is_orbital;
+    float orbital_radius;  
 } Camera;
 
 /**
