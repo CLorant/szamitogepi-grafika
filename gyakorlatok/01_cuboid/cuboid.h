@@ -1,8 +1,10 @@
 #ifndef CUBOID_H
 #define CUBOID_H
 
+#include <stdbool.h>
+
 /**
- * @brief Téglatest struktúra
+ * Cuboid struct
  */
 typedef struct Cuboid {
     float length;
@@ -11,28 +13,29 @@ typedef struct Cuboid {
 } Cuboid;
 
 /**
- * @brief Pozitív lebegőpontos szám bekérés
+ * Gets a positive float value from user input
  */
 void get_positive_float(const char *prompt, float *value);
 
 /**
- * @brief A téglatest 3 élének beállítása
+ * Sets the vertices for a cuboid struct
  */
 void set_size(Cuboid* cuboid);
 
 /**
- * @brief A téglatest térfogatának kiszámítása
+ * Calculates the volume of a cuboid
  */
 float calc_volume(Cuboid cuboid);
 
+
 /**
- * @brief A téglatest felületének kiszámítása
+ * Calculates the surface area of a cuboid
  */
 float calc_surface(Cuboid cuboid);
 
 /**
- * @brief A téglatestnek van-e négyzet alakú lapja
+ * Checks if the cuboid has any square faces
  */
-int has_square_face(Cuboid cuboid);
+bool has_square_face(Cuboid cuboid);
 
 #endif

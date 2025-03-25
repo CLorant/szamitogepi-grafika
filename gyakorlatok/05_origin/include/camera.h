@@ -3,8 +3,6 @@
 
 #include "utils.h"
 
-#include <stdbool.h>
-
 /**
  * Camera, as a moving point with direction
  */

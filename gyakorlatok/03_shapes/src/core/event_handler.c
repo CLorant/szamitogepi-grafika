@@ -13,7 +13,7 @@ void handle_shape_creation(ShapeType type, Point p1, Point p2, Color color, SDL_
             Line newLine;
             set_line(&newLine, p1, p2, color);
             if (push_line(line_stack, &line_stack_pointer, newLine)) {
-                printf(MSG_END_SET, "Vonal", p1.x, p1.y, p2.x, p2.y);
+                printf(MSG_END_SET, "Line", p1.x, p1.y, p2.x, p2.y);
             }
             else {
                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, ERR_RUN_TITLE, ERR_STACK_OVERFLOW_DESC, window);
@@ -24,7 +24,7 @@ void handle_shape_creation(ShapeType type, Point p1, Point p2, Color color, SDL_
             Rectangle newRect;
             set_rect(&newRect, p1, p2, color);
             if (push_rect(rect_stack, &rect_stack_pointer, newRect)) {
-                printf(MSG_END_SET, "Téglalap", p1.x, p1.y, p2.x, p2.y);
+                printf(MSG_END_SET, "Rectangle", p1.x, p1.y, p2.x, p2.y);
             }
             else {
                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, ERR_RUN_TITLE, ERR_STACK_OVERFLOW_DESC, window);
@@ -36,7 +36,7 @@ void handle_shape_creation(ShapeType type, Point p1, Point p2, Color color, SDL_
             Circle newCircle;
             set_circle(&newCircle, p1, radius, color);
             if (push_circle(circle_stack, &circle_stack_pointer, newCircle)) {
-                printf(MSG_END_SET, "Kör", p1.x, p1.y, p2.x, p2.y);
+                printf(MSG_END_SET, "Circle", p1.x, p1.y, p2.x, p2.y);
             }
             else {
                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, ERR_RUN_TITLE, ERR_STACK_OVERFLOW_DESC, window);
@@ -59,7 +59,7 @@ void handle_mouse_click(int mx, int my, Color* current_color, DrawMode current_m
             p1.x = mx;
             p1.y = my;
             draw_state = STATE_FIRST_CLICK;
-            printf(MSG_START_SET, p1.x, p1.y, "alakzat");
+            printf(MSG_START_SET, p1.x, p1.y, "shape");
         }
         else if (draw_state == STATE_FIRST_CLICK) {
             p2.x = mx;
@@ -122,15 +122,15 @@ void handle_mouse_up() {
 void handle_keyboard_input(SDL_Keycode key, DrawMode* current_mode) {
     if (key == SDLK_1) {
         *current_mode = MODE_LINE;
-        printf(MSG_SWITCH_SHAPE, "vonal");
+        printf(MSG_SWITCH_SHAPE, "line");
     }
     else if (key == SDLK_2) {
         *current_mode = MODE_RECTANGLE;
-        printf(MSG_SWITCH_SHAPE, "téglalap");
+        printf(MSG_SWITCH_SHAPE, "rectangle");
     }
     else if (key == SDLK_3) {
         *current_mode = MODE_CIRCLE;
-        printf(MSG_SWITCH_SHAPE, "kör");
+        printf(MSG_SWITCH_SHAPE, "circle");
     }
 }
 

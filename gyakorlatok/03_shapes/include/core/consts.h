@@ -7,52 +7,56 @@
 #include "structs/circle_struct.h"
 #include "structs/draw_state.h"
 
-// Képernyő szélessége és magassága
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
 
-// Maximális alakzatok száma a veremben
+/**
+ * Maximum number of shapes in the stack
+ */
 #define MAX_LINE_COUNT 20
 #define MAX_RECT_COUNT 20
 #define MAX_CIRCLE_COUNT 20
 
-// Kijelölés jelző mérete a köröknél
+/**
+ * The size of the crosshair when hovering over a circle
+ */
 #define CROSSHAIR_SIZE 5
 
-// Körök közelítéséhez használt szakaszok száma
+/**
+ * The number of lines used to approximate a circle
+ */
 #define CIRCLE_SEGMENTS 20
 
-#define WINDOW_TITLE                "3. gyakorlati feladat: Szakaszok rajzolása, Kör közelítése"
+#define WINDOW_TITLE                "Line, rectangle and circle drawing"
 
-#define START_TITLE                 "Instrukciók"
-#define START_DESC                  "1) Válasszon az (1) vonal, (2) téglalap, (3) kör rajzolási módok közül billenyűkkel.\n2) Kattintson a színpalettára színválasztáshoz.\n3) Kattintson az alakzat elkezdéséhez.\n4) Kattintson újra az alakzat befejezéséhez.\n5) A körök bal egér gomb lenyomva tartásával mozgathatóak."
+#define START_TITLE                 "Instructions"
+#define START_DESC                  "1) Choose between (1) line, (2) rectangle, (3) circle drawing modes.\n2) Click on the colour palette to choose a colour.\n3) Click to start the shape.\n4) Click again to finish the shape.\n5) You can move the circles by holding down the left mouse button."
 
-#define ERR_CRITICAL_TITLE          "Kritikus hiba"
-#define ERR_RUN_TITLE               "Futási hiba"
-#define ERR_INIT_SDL_DESC           "SDL indítási hiba: %s" // Param: Hiba üzenet
-#define ERR_CREATE_WINDOW_DESC      "Ablak létrehozási hiba: %s" // Param: Hiba üzenet
-#define ERR_CREATE_RENDERER_DESC    "Renderer létrehozási hiba: %s" // Param: Hiba üzenet
-#define ERR_STACK_OVERFLOW_DESC     "Stack overflow: Nem lehet több alakzatot menteni!"
-#define ERR_STACK_UNDERFLOW_DESC    "Stack underflow: Nincs több mentett alakzat!"
+#define ERR_CRITICAL_TITLE          "Critical error"
+#define ERR_RUN_TITLE               "Runtime error"
+#define ERR_INIT_SDL_DESC           "SDL initialization error: %s"
+#define ERR_CREATE_WINDOW_DESC      "Window creation error: %s"
+#define ERR_CREATE_RENDERER_DESC    "Renderer creation error: %s"
+#define ERR_STACK_OVERFLOW_DESC     "Stack overflow: No more shapes can be saved!"
+#define ERR_STACK_UNDERFLOW_DESC    "Stack underflow: No more saved shapes!"
 
-#define MSG_START_SET               "\nKiinduló pont: (%3d, %3d)\nKattintson a(z) %s befejezéséhez.\n" // Params: x , y, alakzat neve
-#define MSG_END_SET                 "\n%s beállítva!\n(%3d, %3d) -> (%3d, %3d)\n" // Params: Alakzat neve, x1, y1, x2, y2, 
-#define MSG_UNDO                    "Alakzat visszatörölve\n"
-#define MSG_REDO                    "Alakzat visszaállítva\n"    
-#define MSG_SWITCH_SHAPE            "Váltás %s alakzatra\n" // Param: Alakzat neve
-#define MSG_PICKED_COLOR            "Választott szín - R: %d, G: %d, B: %d\n" // Params: r, g, b
+#define MSG_START_SET               "\nStarting point: (%3d, %3d)\nClick to finish the %s.\n"
+#define MSG_END_SET                 "\n%s set!\n(%3d, %3d) -> (%3d, %3d)\n" 
+#define MSG_UNDO                    "Shape undo\n"
+#define MSG_REDO                    "Shape redo\n"    
+#define MSG_SWITCH_SHAPE            "Switching to %s drawing mode\n"
+#define MSG_PICKED_COLOR            "Chosen color - R: %d, G: %d, B: %d\n"
 
-// Globális változók deklarációja
-extern Line line_stack[MAX_LINE_COUNT];       // Vonalak vereme
-extern int line_stack_pointer;                // Vonal verem mutató
-extern Rectangle rect_stack[MAX_RECT_COUNT];  // Téglalapok vereme
-extern int rect_stack_pointer;                // Téglalap verem mutató
-extern Circle circle_stack[MAX_CIRCLE_COUNT]; // Körök vereme
-extern int circle_stack_pointer;              // Kör verem mutató
-extern bool circle_selected[MAX_CIRCLE_COUNT];// Kijelölt körök tömbje
-extern bool dragging;                         // Éppen húzás történik-e
-extern int dragged_circle_index;              // Éppen húzott kör indexe
-extern DrawState draw_state;                  // Rajzolási állapot
-extern Point p1, p2;                          // Két pont a rajzoláshoz
+extern Line line_stack[MAX_LINE_COUNT];
+extern int line_stack_pointer;
+extern Rectangle rect_stack[MAX_RECT_COUNT];
+extern int rect_stack_pointer;
+extern Circle circle_stack[MAX_CIRCLE_COUNT];
+extern int circle_stack_pointer;
+extern bool circle_selected[MAX_CIRCLE_COUNT];
+extern bool dragging;
+extern int dragged_circle_index;
+extern DrawState draw_state;
+extern Point p1, p2;
 
 #endif

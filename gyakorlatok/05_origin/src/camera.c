@@ -1,7 +1,7 @@
 #include "camera.h"
 
 #include <GL/gl.h>
-
+#include <GL/glu.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -55,6 +55,17 @@ void set_view(const Camera* camera)
     glRotatef(-(camera->rotation.z - 90), 0, 0, 1.0);
     glRotatef(-(camera->rotation.y), 0, 1.0, 0);
     glTranslatef(-camera->position.x, -camera->position.y, -camera->position.z);
+    /*
+    const float radius = 3;
+    float azimuth = degree_to_radian(camera->rotation.z);
+    float elevation = degree_to_radian(camera->rotation.x);
+
+    float x = radius * cos(azimuth) * cos(elevation);
+    float y = radius * sin(azimuth) * cos(elevation);
+    float z = radius * sin(elevation);
+
+    gluLookAt(x, y, z, 0, 0, 0, 0, 0, 1);
+    */
 }
 
 void rotate_camera(Camera* camera, double horizontal, double vertical)
@@ -77,6 +88,17 @@ void rotate_camera(Camera* camera, double horizontal, double vertical)
     if (camera->rotation.x > 360.0) {
         camera->rotation.x -= 360.0;
     }
+    /*
+    const float sensitivity = 0.5f;
+    camera->rotation.z += horizontal * sensitivity;
+    camera->rotation.x += vertical * sensitivity;
+
+    if (camera->rotation.x > 89.0f) camera->rotation.x = 89.0f;
+    if (camera->rotation.x < -89.0f) camera->rotation.x = -89.0f;
+
+    if (camera->rotation.z < 0) camera->rotation.z += 360.0f;
+    if (camera->rotation.z >= 360.0f) camera->rotation.z -= 360.0f;
+    */
 }
 
 void set_camera_speed(Camera* camera, double speed)

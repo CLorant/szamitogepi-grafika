@@ -5,16 +5,12 @@
 #include <string.h>
 #include <math.h>
 
-#define ERROR_MSG_INPUT "Hiba a bemenet olvasásakor! (ENTER - újrapróbálkozás, CTRL + C - kilépés)\n"
-#define ERROR_MSG_NUM "Érvényes, pozitív számot adjon meg!\n"
-#define MATRIX_MULTI_PROMPT "\nA két összeszorzandó mátrix:\n"
-#define STACK_OVERFLOW "Stack overflow! Nem lehet több mátrixot menteni.\n"
-#define STACK_UNDERFLOW "Stack underflow! Nincs több mentett mátrix.\n"
+const char* ERROR_MSG_INPUT = "Hiba a bemenet olvasásakor! (ENTER - újrapróbálkozás, CTRL + C - kilépés)\n";
 
 void get_positive_int(const char *prompt, int *value) {
     printf("%s", prompt);
     while (scanf("%d", value) != 1 || *value <= 0) {
-        perror(ERROR_MSG_NUM);
+        printf("Enter a valid, positive number!\n");
         while (getchar() != '\n');
         printf("%s", prompt);
     }
@@ -31,7 +27,7 @@ void get_matrix(const char *prompt, int n, int matrix[n][n]) {
 
     for (int i = 0; i < n; i++) {
         
-        printf("%d. sor: ", i + 1);
+        printf("%d. row: ", i + 1);
         
         if (!fgets(line, sizeof(line), stdin)) {
             perror(ERROR_MSG_INPUT);
@@ -41,9 +37,9 @@ void get_matrix(const char *prompt, int n, int matrix[n][n]) {
         char *token = strtok(line, " \n");
         for (int j = 0; j < n; j++) {
             if (token == NULL) {
-                perror(ERROR_MSG_INPUT);
+                printf(ERROR_MSG_INPUT);
                 clear_input_buffer();
-                get_matrix(prompt, n, matrix); // Helytelen input esetén újra megadható
+                get_matrix(prompt, n, matrix);
                 return;
             }
             matrix[i][j] = atoi(token);
@@ -88,7 +84,7 @@ void scalar_multiply(int n, int matrix[n][n], int scalar) {
 }
 
 void multiply_matrices(int n, int res[n][n], int m1[n][n], int m2[n][n]) {
-    printf(MATRIX_MULTI_PROMPT);
+    printf("\nThe two matrices to be multiplied:\n");
     print_matrix(n, m1);
     print_matrix(n, m2);
 
@@ -141,7 +137,7 @@ void shift(int n, int matrix[n][n], int x, int y) {
 }
 
 void rotate(int n, int matrix[n][n], int rotate_deg) {
-    float rad = rotate_deg * M_PI / 180.0; // Az itteni M_PI hibaüzenet (ha megjelenik) fals pozitív
+    float rad = rotate_deg * M_PI / 180.0;
     float cosA = cos(rad);
     float sinA = sin(rad);
 
@@ -183,7 +179,7 @@ void push_matrix(int n, int matrix[n][n]) {
         return;
     }
     
-    perror(STACK_OVERFLOW);
+    perror("Stack overflow! No more matrices can be saved.\n");
 }
 
 void pop_matrix(int n, int matrix[n][n]) {
@@ -197,5 +193,5 @@ void pop_matrix(int n, int matrix[n][n]) {
         return;
     }
     
-    perror(STACK_UNDERFLOW);
+    perror("Stack underflow! No more saved matrices.\n");
 }

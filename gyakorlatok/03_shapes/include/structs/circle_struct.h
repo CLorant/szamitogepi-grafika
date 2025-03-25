@@ -4,7 +4,6 @@
 #include "point.h"
 #include "color.h"
 
-// Kör struktúra (középpont, sugár, szín)
 typedef struct Circle {
 	Point center;
     float radius;

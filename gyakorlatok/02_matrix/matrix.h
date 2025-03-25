@@ -2,17 +2,18 @@
 #define MATRIX_H
 
 /**
- * @brief Négyzetes mátrix mérete, N = 3 eseten optimáls
+ * The size for uniform matrices in the program
+ * Usually best kept as 3
  */
 #define N 3
 
 /**
- * @brief A verem mérete, optimálisan egy kellően nagy szám
+ * The limit for how many operations can be saved in the stack
  */
 #define MAX_STACK 10
 
 /**
- * @brief Homogén koordinátás pont struktúra
+ * Homogen coordinate point struct
  */
 typedef struct HomPoint {
     float x;
@@ -21,72 +22,73 @@ typedef struct HomPoint {
 } HomPoint;
 
 /**
- * @brief Pozitív egész szám bekérés
+ * Gets a positive int value from user input
  */
 void get_positive_int(const char *prompt, int *value);
 
 /**
- * @brief Input buffer törlése
+ * Clears the input buffer, which is important for
+ * the line by line matrix console input
  */
 void clear_input_buffer();
 
 /**
- * @brief Felhasználótól mátrix bekérés
+ * Get a matrix line by line from user input
  */
 void get_matrix(const char *prompt, int n, int matrix[n][n]);
 
 /**
- * @brief Mátrix kiírása
+ * Print matrix
  */
 void print_matrix(int n, int matrix[n][n]);
 
 /**
- * @brief Nulla mátrix inicializálása
+ * Initalizes a matrix containing zeroes
  */
 void init_zero_matrix(int n, int matrix[n][n]);
 
 /**
- * @brief Egység mátrix inicializálása
+ * Initalizes an identity matrix
  */
 void init_identity_matrix(int n, int matrix[n][n]);
 
 /**
- * @brief Mátrix skaláris szorzása
+ * Scalar multiplies a matrix
  */
 void scalar_multiply(int n, int matrix[n][n], int scalar);
 
 /**
- * @brief Két mátrix szorzása
+ * Multiplies two matrices
  */
 void multiply_matrices(int n, int res[n][n], int m1[n][n], int m2[n][n]);
 
 /**
- * @brief Homogén koordinátás pont transzformációja, transzformációs mátrix-al
+ * Transformations a homogen coordinate point, using a transformation matrix
  */
 void transform_point(HomPoint *point, int n, int t_matrix[n][n]);
 
 /**
- * @brief Transzformációs mátrix skálázása, a multip paraméterrel
+ * Scales a transformation matrix by multip
  */
 void scale(int n, int matrix[n][n], int multip);
 
 /**
- * @brief Transzformációs mátrix eltolása, az x, y paraméterekkel
+ * Shifts a transformation matrix by x, y
  */
 void shift(int n, int matrix[n][n], int x, int y);
 
 /**
- * @brief Transzformációs mátrix forgatása, a rotate_deg paraméterrel
+ * Rotates a transformation matrix by rotate_deg
  */
 void rotate(int n, int matrix[n][n], int rotate_deg);
 
 /**
- * @brief Mátrix berakása a verembe
+ * Pushes a matrix into the stack
  */
 void push_matrix(int n, int matrix[n][n]);
 
 /**
- * @brief Mátrix kivétele a veremből
+ * Removes a matrix from the stack
  */
 void pop_matrix(int n, int matrix[n][n]);
 

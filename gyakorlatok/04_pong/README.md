@@ -21,8 +21,6 @@ Ez a program Piller Imre "Pong" példa programjának egy módosított verziója,
 - ```make``` parancs használata fordításhoz
 - ```shapes.exe``` vagy ```./shapes``` futtatáshoz
 
-**Megjegyzés:** Ezek előtt szükséges leklónozni a repository-t és belépni a 04_pong mappába.
-
 ### Dokumentáció
 
 **/src:**

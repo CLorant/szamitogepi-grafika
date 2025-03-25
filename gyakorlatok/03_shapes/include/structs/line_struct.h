@@ -4,7 +4,6 @@
 #include "point.h"
 #include "color.h"
 
-// Vonal struktúra (kezdőpont, végpont, szín)
 typedef struct Line {
     Point p1, p2;
     Color color;

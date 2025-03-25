@@ -10,22 +10,21 @@ const int CHAR_HEIGHT = 64;
 const int CHARS_PER_ROW = 16;
 
 void init_font_texture_coords(Texture* texture) {
-    float char_width = CHAR_WIDTH / TEXTURE_WIDTH;  // 32px / 512px (texture width)
-    float char_height = CHAR_HEIGHT / TEXTURE_WIDTH; // 64px / 512px (texture height)
+    float char_width = CHAR_WIDTH / TEXTURE_WIDTH;
+    float char_height = CHAR_HEIGHT / TEXTURE_WIDTH;
 
     for (int i = 0; i < 128; i++) {
         if (i < CHAR_WIDTH) {
-            // Non-printable or empty characters (first 2 rows)
             texture->font_texture_coords[i] = (CharUV){0.0f, 0.0f, 0.0f, 0.0f};
-        } else {
-            // Printable characters (starting from row 3)
-            int row = (i - CHAR_WIDTH) / CHARS_PER_ROW + 2;  // Rows start from index 2
+        }
+        else {
+            int row = (i - CHAR_WIDTH) / CHARS_PER_ROW + 2;
             int col = (i - CHAR_WIDTH) % CHARS_PER_ROW;
             texture->font_texture_coords[i] = (CharUV){
-                col * char_width,       // u
-                row * char_height,      // v
-                char_width,             // w
-                char_height             // h
+                col * char_width,
+                row * char_height,
+                char_width,
+                char_height
             };
         }
     }
@@ -52,7 +51,7 @@ GLuint load_texture(const char* filename) {
 
 void render_char(Texture* texture, float x, float y, unsigned char c) {
     if (!isprint(c)) {
-        return;  // Skip non-printable characters
+        return;
     }
 
     CharUV uv = texture->font_texture_coords[(unsigned char)c];

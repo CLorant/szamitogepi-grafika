@@ -2,9 +2,13 @@
 #define TEXT_H
 #include <GL/gl.h>
 
+/**
+ * u,v Top-left corner of the character in the texture
+ * w,h Width and height of the character
+ */
 typedef struct CharUV {
-    float u, v;  // Top-left corner of the character in the texture
-    float w, h;  // Width and height of the character
+    float u, v; 
+    float w, h; 
 } CharUV;
 
 typedef struct Texture {
