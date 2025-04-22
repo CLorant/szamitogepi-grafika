@@ -5,26 +5,20 @@
 #include <math.h>
 
 void init_camera(Camera* camera) {
-    camera->position.x = 0.0;
-    camera->position.y = 0.0;
-    camera->position.z = 1.0;
-    camera->rotation.x = 0.0;
-    camera->rotation.y = 0.0;
-    camera->rotation.z = 0.0;
-    camera->speed.x = 0.0;
-    camera->speed.y = 0.0;
-    camera->speed.z = 0.0;
-
+    camera->position = (Vec3){0.0, 0.0, 1.0};
+    camera->rotation = (Vec3){0.0, 0.0, 0.0};
+    camera->speed = (Vec3){0.0, 0.0, 0.0};
     camera->is_preview_visible = false;
     camera->is_orbital = false;
     camera->orbital_radius = 3.0;
+    camera->fov = 50.0;
 }
 
 void update_camera(Camera* camera, double time) {
     if (!camera->is_orbital) {
         double angle = degree_to_radian(camera->rotation.z);
         double side_angle = degree_to_radian(camera->rotation.z + 90.0);
-
+        
         camera->position.x += cos(angle) * camera->speed.y * time;
         camera->position.y += sin(angle) * camera->speed.y * time;
         camera->position.x += cos(side_angle) * camera->speed.x * time;
@@ -92,6 +86,10 @@ void set_camera_side_speed(Camera* camera, double speed) {
 
 void set_camera_vertical_speed(Camera* camera, double speed) {
     camera->speed.z = speed;
+}
+
+void adjust_fov(Camera* camera, float amount) {
+    camera->fov = fminf(fmaxf(camera->fov + amount, 30.0f), 120.0f);
 }
 
 void show_texture_preview() {

@@ -6,10 +6,10 @@
 
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
+#include <GL/glu.h>
 
 #include <stdbool.h>
 
-#define VIEWPORT_RATIO (4.0 / 3.0)
 #define VIEWPORT_ASPECT 50.0
 
 /**
@@ -19,6 +19,7 @@ typedef struct App {
     SDL_Window* window;
     SDL_GLContext gl_context;
     bool is_running;
+    bool is_fullscreen;
     double uptime;
     Camera camera;
     Scene scene;
@@ -37,7 +38,7 @@ void init_opengl();
 /**
  * Reshape the window.
  */
-void reshape(GLsizei width, GLsizei height);
+void reshape(GLsizei width, GLsizei height, float fov);
 
 /**
  * Handle the events of the application.

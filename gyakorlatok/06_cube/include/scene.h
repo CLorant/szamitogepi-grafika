@@ -83,16 +83,6 @@ Object* find_object_by_id(Scene* scene, int id);
 void adjust_brightness(Scene* scene, float amount);
 
 /**
- * Set a light source of the scene.
- */
-void set_lighting(int slot, const Lighting* light);
-
-/**
- * Set the current material.
- */
-void set_material(const Material* material);
-
-/**
  * Update the scene.
  */
 void update_scene(Scene* scene, double elapsed_time);
@@ -103,25 +93,10 @@ void update_scene(Scene* scene, double elapsed_time);
 void render_scene(const Scene* scene);
 
 /**
- * Check if any of the x, y, z slabs of the object was hit.
- */
-bool slab_hit(float origin, float dir, float min_box, float max_box, float *tmin, float *tmax);
-
-/**
  * Check if mouse coordinates intersect with an object
  * Returns object ID or -1 if no object was hit
  */
 int select_object_at(Scene* scene, Camera* camera, int mouse_x, int mouse_y);
-
-/**
- * Calculate the bounding box of a model.
- */
-void calculate_bounding_box(Object* obj);
-
-/**
- * Draw the bounding box of a model.
- */
-void draw_bounding_box(Object* obj);
 
 /**
  * Rotate the currently selected object
@@ -132,16 +107,6 @@ void rotate_selected_object(Scene* scene, float x_rotation, float y_rotation);
  * Reset rotation of selected object
  */
 void reset_selected_object_rotation(Scene* scene);
-
-/**
- * Draw the origin of the world coordinate system.
- */
-void draw_origin(float size);
-
-/**
- * Draw a checkerboard pattern on the ground.
- */
-void draw_checkerboard(int size, float square_size);
 
 /**
  * Free all resources used by the scene

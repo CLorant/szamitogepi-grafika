@@ -222,69 +222,6 @@ void adjust_brightness(Scene* scene, float amount) {
     }
 }
 
-void set_lighting(int slot, const Lighting* light) {
-    GLenum light_enum = GL_LIGHT0 + slot;
-
-    float ambient_light[] = {
-        light->ambient.red,
-        light->ambient.green,
-        light->ambient.blue,
-        light->ambient.alpha
-    };
-
-    float diffuse_light[] = {
-        light->diffuse.red,
-        light->diffuse.green,
-        light->diffuse.blue,
-        light->ambient.alpha
-    };
-
-    float specular_light[] = {
-        light->specular.red,
-        light->specular.green,
-        light->specular.blue,
-        light->ambient.alpha
-    };
-
-    float light_position[] = {
-        light->position.x,
-        light->position.y,
-        light->position.z,
-        light->position.w
-    };
-
-    glLightfv(light_enum, GL_AMBIENT, ambient_light);
-    glLightfv(light_enum, GL_DIFFUSE, diffuse_light);
-    glLightfv(light_enum, GL_SPECULAR, specular_light);
-    glLightfv(light_enum, GL_POSITION, light_position);
-}
-
-void set_material(const Material* material) {
-    float ambient_color[] = {
-        material->ambient.red,
-        material->ambient.green,
-        material->ambient.blue
-    };
-
-    float diffuse_color[] = {
-        material->diffuse.red,
-        material->diffuse.green,
-        material->diffuse.blue
-    };
-
-    float specular_color[] = {
-        material->specular.red,
-        material->specular.green,
-        material->specular.blue
-    };
-
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular_color);
-
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &(material->shininess));
-}
-
 void update_scene(Scene* scene, double elapsed_time) {
     static float total_time = 0.0f;
     total_time += elapsed_time;
@@ -381,21 +318,6 @@ void render_scene(const Scene* scene) {
     }
 }
 
-bool slab_hit(float origin, float dir, float min_box, float max_box, float* tmin, float* tmax) {
-    float inv_dir = 1.0f / dir;
-    float t0 = (min_box - origin) * inv_dir;
-    float t1 = (max_box - origin) * inv_dir;
-    if (inv_dir < 0.0f) {
-        float tmp = t0;
-        t0 = t1;
-        t1 = tmp;
-    }
-    *tmin = fmaxf(t0, *tmin);
-    *tmax = fminf(t1, *tmax);
-
-    return *tmax > *tmin;
-}
-
 int select_object_at(Scene* scene, Camera* camera, int mouse_x, int mouse_y) {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
@@ -470,81 +392,14 @@ int select_object_at(Scene* scene, Camera* camera, int mouse_x, int mouse_y) {
     return hit_id;
 }
 
-void calculate_bounding_box(Object* obj) {
-    if (obj->model.n_vertices == 0) return;
-
-    Vertex init_vertex = obj->model.vertices[0];
-    obj->bounding.min = obj->bounding.max = (Vec3){
-        init_vertex.x,
-        init_vertex.y,
-        init_vertex.z,
-    };
-
-    for (int i = 1; i < obj->model.n_vertices; ++i) {
-        Vertex current_vertex = obj->model.vertices[i];
-        Vec3 v = (Vec3){
-            current_vertex.x, current_vertex.y, current_vertex.z
-        };
-        obj->bounding.min = vec3_min(obj->bounding.min, v);
-        obj->bounding.max = vec3_max(obj->bounding.max, v);
-    }
-}
-
-void draw_bounding_box(Object* obj) {
-    if (!obj->is_active || obj->is_static || obj->model.n_vertices == 0) {
-        return;
-    }
-
-    BoundingBox box = obj->bounding;
-    float min_x = box.min.x, min_y = box.min.y, min_z = box.min.z;
-    float max_x = box.max.x, max_y = box.max.y, max_z = box.max.z;
-
-    glDisable(GL_LIGHTING);
-    glColor3f(1.0f, 1.0f, 0.0f);
-    glLineWidth(2.0f);
-
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(min_x, min_y, min_z);
-    glVertex3f(max_x, min_y, min_z);
-    glVertex3f(max_x, max_y, min_z);
-    glVertex3f(min_x, max_y, min_z);
-    glEnd();
-
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(min_x, min_y, max_z);
-    glVertex3f(max_x, min_y, max_z);
-    glVertex3f(max_x, max_y, max_z);
-    glVertex3f(min_x, max_y, max_z);
-    glEnd();
-
-    glBegin(GL_LINES);
-    glVertex3f(min_x, min_y, min_z);
-    glVertex3f(min_x, min_y, max_z);
-    glVertex3f(max_x, min_y, min_z);
-    glVertex3f(max_x, min_y, max_z);
-    glVertex3f(max_x, max_y, min_z);
-    glVertex3f(max_x, max_y, max_z);
-    glVertex3f(min_x, max_y, min_z);
-    glVertex3f(min_x, max_y, max_z);
-    glEnd();
-
-    glEnable(GL_LIGHTING);
-    glLineWidth(1.0f);
-}
-
 void rotate_selected_object(Scene* scene, float x_rotation, float y_rotation) {
     Object* obj = find_object_by_id(scene, scene->selected_object_id);
     if (obj == NULL) {
         return;
     }
 
-    Vec3 current_rotation = obj->anim_transform.rotation;
-    set_rotation(&obj->anim_transform,
-        current_rotation.x + x_rotation,
-        current_rotation.y + y_rotation,
-        current_rotation.z);
-
-    obj->anim_transform.matrix_dirty = true;
+    obj->anim_transform.rotation.x += x_rotation;
+    obj->anim_transform.rotation.y += y_rotation;
 }
 
 void reset_selected_object_rotation(Scene* scene) {
@@ -554,49 +409,6 @@ void reset_selected_object_rotation(Scene* scene) {
     }
 
     reset_rotation(&obj->anim_transform);
-}
-
-void draw_origin(float size) {
-    glBegin(GL_LINES);
-
-    glColor3f(size, 0, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(size, 0, 0);
-
-    glColor3f(0, size, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, size, 0);
-
-    glColor3f(0, 0, size);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, size);
-
-    glEnd();
-}
-
-void draw_checkerboard(int size, float square_size) {
-    glBegin(GL_QUADS);
-
-    for (int i = -size; i < size; i++) {
-        for (int j = -size; j < size; j++) {
-            if ((i + j) % 2 == 0) {
-                glColor3f(0.9, 0.9, 0.9);
-            }
-            else {
-                glColor3f(0.1, 0.1, 0.1);
-            }
-
-            float x = i * square_size;
-            float y = j * square_size;
-
-            glVertex3f(x, y, 0);
-            glVertex3f(x + square_size, y, 0);
-            glVertex3f(x + square_size, y + square_size, 0);
-            glVertex3f(x, y + square_size, 0);
-        }
-    }
-
-    glEnd();
 }
 
 void free_scene(Scene* scene) {

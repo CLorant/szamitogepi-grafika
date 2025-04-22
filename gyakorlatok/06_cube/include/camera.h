@@ -14,7 +14,8 @@ typedef struct Camera {
     Vec3 rotation_speed;
     bool is_preview_visible;
     bool is_orbital;
-    float orbital_radius;  
+    float orbital_radius;
+    float fov;
 } Camera;
 
 /**
@@ -51,6 +52,11 @@ void set_camera_side_speed(Camera* camera, double speed);
  * Set the speed of vertical motion.
  */
 void set_camera_vertical_speed(Camera* camera, double speed);
+
+/**
+ * Adjust the Field of View of the camera
+ */
+void adjust_fov(Camera* camera, float amount);
 
 /**
  * Show the texture preview.

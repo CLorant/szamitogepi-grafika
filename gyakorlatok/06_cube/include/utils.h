@@ -4,6 +4,8 @@
 #include <obj/model.h>
 #include <stdbool.h>
 
+typedef struct Object Object;
+
 /**
  * Threshold to avoid division by near-zero values.
  */
@@ -71,16 +73,6 @@ typedef struct Material {
 } Material;
 
 /**
- * Matrix 3x3.
- */
-typedef float Mat3[3][3];
-
-/**
- * Matrix 4x4.
- */
-typedef float Mat4[4][4];
-
-/**
  * Bounding box with min and max vectors.
  */
 typedef struct BoundingBox {
@@ -90,18 +82,47 @@ typedef struct BoundingBox {
 
 /**
  * Transform for handling static and animation transformations.
- * Has specific flags for preventing transformation errors and easier use.
  */
 typedef struct Transform {
     Vec3 position;
     Vec3 rotation;
     Vec3 scale;
-    bool position_changed;
-    bool rotation_changed;
-    bool scale_changed;
-    bool matrix_dirty;
-    Mat4 matrix;
 } Transform;
+
+/**
+ * Check if any of the x, y, z slabs of the object was hit.
+ */
+bool slab_hit(float origin, float dir, float min_box, float max_box, float *tmin, float *tmax);
+
+/**
+ * Calculate the bounding box of a model.
+ */
+void calculate_bounding_box(Object* obj);
+
+/**
+ * Set a light source of the scene.
+ */
+void set_lighting(int slot, const Lighting* light);
+
+/**
+ * Set the current material.
+ */
+void set_material(const Material* material);
+
+/**
+ * Draw the origin of the world coordinate system.
+ */
+void draw_origin(float size);
+
+/**
+ * Draw a checkerboard pattern on the ground.
+ */
+void draw_checkerboard(int size, float square_size);
+
+/**
+ * Draw the bounding box of a model.
+ */
+void draw_bounding_box(Object* obj);
 
 /**
  * Set an RGB color.
@@ -154,60 +175,9 @@ void vec3_normalize(Vec3* v);
 double degree_to_radian(double degree);
 
 /**
- * Calculate the bounding box of a model.
- */
-float calculate_model_bounding_radius(Model* model);
-
-/**
- * Get an identity matrix for size dimensions.
- */
-void mat_identity(int size, float m[size][size]);
-
-/**
- * Multiply two matrices of s dimensions.
- */
-void mat_multiply(int s, float result[s][s], float a[s][s], float b[s][s]);
-
-/**
- * Multiply two 4x4 matrices in place.
- */
-void mat4_mul_inplace(Mat4 m, Mat4 op);
-
-/**
- * Translate / Shift a 4x4 matrix.
- */
-void mat4_translate(Mat4 m, float x, float y, float z);
-
-/**
- * Scale a 4x4 matrix.
- */
-void mat4_scale(Mat4 m, float x, float y, float z);
-
-/**
- * Rotate a 4x4 matrix.
- */
-void mat4_rotate(Mat4 m, float angle_degrees, float x, float y, float z);
-
-/**
- * Rotate a 3x3 matrix using the Rodrigues' rotation formula.
- * The rotation is cancelled in edge cases.
- */
-void calculate_rotation_matrix(Mat3 result, float angle_degrees, float x, float y, float z);
-
-/**
- * Update the transform matrix.
- */
-void update_transform_matrix(Transform* t);
-
-/**
  * Initialize the transform structure.
  */
 void transform_init(Transform* transform);
-
-/**
- * Mark transform components as dirty.
- */
-void mark_dirty(Transform* t, bool pos, bool rot, bool scl);
 
 /**
  * Set the position, rotation, and scale of the transform.

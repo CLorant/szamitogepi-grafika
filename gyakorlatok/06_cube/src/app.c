@@ -18,10 +18,12 @@ void init_app(App* app, int width, int height)
     }
 
     app->window = SDL_CreateWindow(
-        "Cube!",
+        "Models",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         width, height,
-        SDL_WINDOW_OPENGL);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+    );
+
     if (app->window == NULL) {
         printf("[ERROR] Unable to create the application window!\n");
         return;
@@ -40,14 +42,18 @@ void init_app(App* app, int width, int height)
     }
 
     init_opengl();
-    reshape(width, height);
+
+    if (SDL_GL_SetSwapInterval(1) != 0) {
+        printf("[ERROR] VSync failed. Running without it.\n");
+        SDL_GL_SetSwapInterval(0); 
+    }
 
     init_camera(&(app->camera));
+    reshape(width, height, app->camera.fov);
     init_scene(&(app->scene));
 
     app->is_running = true;
-
-    SDL_GL_SetSwapInterval(1);
+    app->is_fullscreen = false;
 }
 
 void init_opengl()
@@ -72,32 +78,19 @@ void init_opengl()
     glEnable(GL_LIGHT0);
 }
 
-void reshape(GLsizei width, GLsizei height) {
-    int x, y, w, h;
-    double ratio;
-
-    ratio = (double)width / height;
-    if (ratio > VIEWPORT_RATIO) {
-        w = (int)((double)height * VIEWPORT_RATIO);
-        h = height;
-        x = (width - w) / 2;
-        y = 0;
-    }
-    else {
-        w = width;
-        h = (int)((double)width / VIEWPORT_RATIO);
-        x = 0;
-        y = (height - h) / 2;
+void reshape(GLsizei width, GLsizei height, float fov) {
+    if (height == 0) {
+        height = 1;
     }
 
-    glViewport(x, y, w, h);
+    glViewport(0, 0, width, height);
+    
+    float aspect_ratio = (float)width / height;
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(
-        -.08, .08,
-        -.06, .06,
-        .1, 10
-    );
+    gluPerspective(fov, aspect_ratio, 0.1, 100.0);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void handle_app_events(App* app)
@@ -106,11 +99,14 @@ void handle_app_events(App* app)
     static bool is_mouse_down = false;
     static int mouse_x = 0;
     static int mouse_y = 0;
-    int x;
-    int y;
-
+    int x, y, w, h;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                reshape(event.window.data1, event.window.data2, app->camera.fov);
+            }
+            break;
         case SDL_KEYDOWN:
             switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_ESCAPE:
@@ -172,6 +168,23 @@ void handle_app_events(App* app)
                 break;
             case SDL_SCANCODE_PAGEDOWN:
                 adjust_brightness(&(app->scene), -0.1f);
+            case SDL_SCANCODE_F11:
+                app->is_fullscreen = !app->is_fullscreen;
+                SDL_SetWindowFullscreen(
+                    app->window, 
+                    app->is_fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
+                );
+                break;
+            case SDL_SCANCODE_KP_PLUS:
+                adjust_fov(&app->camera, -5.0f);
+                SDL_GetWindowSize(app->window, &w, &h);
+                reshape(w, h, app->camera.fov);
+                break;
+            case SDL_SCANCODE_KP_MINUS:
+                adjust_fov(&app->camera, 5.0f);
+                SDL_GetWindowSize(app->window, &w, &h);
+                reshape(w, h, app->camera.fov);
+                break;
             default:
                 break;
             }

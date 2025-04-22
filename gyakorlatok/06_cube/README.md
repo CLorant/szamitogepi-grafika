@@ -11,6 +11,8 @@ Ez a program Piller Imre "Cube" példa programjának egy módosított verziója,
 - Objektum kiválasztás visszaállítása `T` billenytűvel.
 - Objektum forgatásának visszaállítása `R` billenytűvel.
 - Fényerő változtatása `PageUp` és `PageDown` billenytűkkel.
+- Teljes képernyős mód `F11` billenyűvel.
+- FOV változtatása `KeyPad+` és `KeyPad-` billenytűkkel.
 - Minden objektum modellje megfelelően transzformált inicializáskor
 - A nem statikus objektumok idő függvényében forgatottak
 - A globális anyagtulajdonság beállítva fémes hatású szürkére (fallback)
