@@ -2,18 +2,19 @@
 #define CAMERA_H
 
 #include "utils.h"
-
 #include <stdbool.h>
 
 /**
- * Camera, as a moving point with direction
+ * Camera, as a moving point with direction.
  */
-typedef struct Camera
-{
-    vec3 position;
-    vec3 rotation;
-    vec3 speed;
+typedef struct Camera {
+    Vec3 position;
+    Vec3 rotation;
+    Vec3 speed;
+    Vec3 rotation_speed;
     bool is_preview_visible;
+    bool is_orbital;
+    float orbital_radius;  
 } Camera;
 
 /**
@@ -46,6 +47,14 @@ void set_camera_speed(Camera* camera, double speed);
  */
 void set_camera_side_speed(Camera* camera, double speed);
 
+/**
+ * Set the speed of vertical motion.
+ */
+void set_camera_vertical_speed(Camera* camera, double speed);
+
+/**
+ * Show the texture preview.
+ */
 void show_texture_preview();
 
 #endif /* CAMERA_H */

@@ -1,5 +1,6 @@
 #include "app.h"
 #include <stdio.h>
+#include <math.h>
 
 #include <SDL2/SDL_image.h>
 
@@ -45,6 +46,8 @@ void init_app(App* app, int width, int height)
     init_scene(&(app->scene));
 
     app->is_running = true;
+
+    SDL_GL_SetSwapInterval(1);
 }
 
 void init_opengl()
@@ -69,8 +72,7 @@ void init_opengl()
     glEnable(GL_LIGHT0);
 }
 
-void reshape(GLsizei width, GLsizei height)
-{
+void reshape(GLsizei width, GLsizei height) {
     int x, y, w, h;
     double ratio;
 
@@ -102,7 +104,6 @@ void handle_app_events(App* app)
 {
     SDL_Event event;
     static bool is_mouse_down = false;
-    static bool is_move_model = false;
     static int mouse_x = 0;
     static int mouse_y = 0;
     int x;
@@ -115,7 +116,7 @@ void handle_app_events(App* app)
             case SDL_SCANCODE_ESCAPE:
                 app->is_running = false;
                 break;
-            case SDL_SCANCODE_W:
+                case SDL_SCANCODE_W:
                 set_camera_speed(&(app->camera), 1);
                 break;
             case SDL_SCANCODE_S:
@@ -127,10 +128,50 @@ void handle_app_events(App* app)
             case SDL_SCANCODE_D:
                 set_camera_side_speed(&(app->camera), -1);
                 break;
-            case SDL_SCANCODE_M:
-                is_move_model = !is_move_model;
-                printf("Model move mode: %s\n", is_move_model ? "True" : "False");
+                case SDL_SCANCODE_M:
+                app->camera.is_orbital = !app->camera.is_orbital;
                 break;
+            case SDL_SCANCODE_Q:
+                if (app->camera.is_orbital) {
+                    app->camera.orbital_radius -= 0.1;
+
+                    if (app->camera.orbital_radius < 1.0) {
+                        app->camera.orbital_radius = 1.0;
+                    }
+                }
+                else {
+                    set_camera_vertical_speed(&(app->camera), 1);
+                }
+                break;
+            case SDL_SCANCODE_E:
+                if (app->camera.is_orbital) {
+                    app->camera.orbital_radius += 0.1;
+
+                    if (app->camera.orbital_radius > 10.0) {
+                        app->camera.orbital_radius = 10.0;
+                    }
+                }
+                else {
+                    set_camera_vertical_speed(&(app->camera), -1);
+                }
+                break;
+            case SDL_SCANCODE_J:
+                rotate_camera(&(app->camera), -1.5, 0);
+                break;
+            case SDL_SCANCODE_L:
+                rotate_camera(&(app->camera), 1.5, 0);
+                break;
+            case SDL_SCANCODE_T:
+                app->scene.selected_object_id = -1;
+                break;
+                case SDL_SCANCODE_R:
+                reset_selected_object_rotation(&app->scene);
+                break;
+            case SDL_SCANCODE_PAGEUP:
+                adjust_brightness(&(app->scene), 0.1f);
+                break;
+            case SDL_SCANCODE_PAGEDOWN:
+                adjust_brightness(&(app->scene), -0.1f);
             default:
                 break;
             }
@@ -145,24 +186,37 @@ void handle_app_events(App* app)
             case SDL_SCANCODE_D:
                 set_camera_side_speed(&(app->camera), 0);
                 break;
+            case SDL_SCANCODE_Q:
+            case SDL_SCANCODE_E:
+                set_camera_vertical_speed(&(app->camera), 0);
+                break;
+            case SDL_SCANCODE_J:
+            case SDL_SCANCODE_L:
+                set_camera_speed(&(app->camera), 0);
+                break;
             default:
                 break;
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
             is_mouse_down = true;
+            SDL_GetMouseState(&mouse_x, &mouse_y);
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                app->scene.selected_object_id = select_object_at(&(app->scene), &(app->camera), mouse_x, mouse_y);
+            }
             break;
         case SDL_MOUSEMOTION:
             SDL_GetMouseState(&x, &y);
-            if (is_mouse_down) {
-                if (is_move_model) {
-                    /// TODO: Use other functions, correctly determine params by model x, y, z coords
-                    transform_model(&(app->scene.cat), VEC3(mouse_x - x, mouse_y - y, 0), NULL, NULL);
-                }
-                else {
-                    rotate_camera(&(app->camera), mouse_x - x, mouse_y - y);
-                }
+            int dx = mouse_x - x;
+            int dy = mouse_y - y;
+            
+            if (is_mouse_down && app->scene.selected_object_id >= 0) {
+                rotate_selected_object(&app->scene, dy * 0.5f, dx * 0.5f);
             }
+            else {
+                rotate_camera(&(app->camera), dx, dy);
+            }
+            
             mouse_x = x;
             mouse_y = y;
             break;
@@ -188,7 +242,7 @@ void update_app(App* app)
     app->uptime = current_time;
 
     update_camera(&(app->camera), elapsed_time);
-    update_scene(&(app->scene));
+    update_scene(&(app->scene), elapsed_time);
 }
 
 void render_app(App* app)
