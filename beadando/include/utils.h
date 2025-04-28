@@ -1,0 +1,179 @@
+#ifndef UTILS_H
+#define UTILS_H
+
+#include <obj/model.h>
+#include <stdbool.h>
+
+#define EPSILON 1e-6f
+#define MAX_LIGHTS 16 // For config loading, GL limit is 8
+#define MAX_OBJECTS 64
+
+typedef struct Object Object;
+
+/**
+ * GLSL-like three dimensional vector.
+ */
+typedef struct Vec3 {
+    float x;
+    float y;
+    float z;
+} Vec3;
+
+/**
+ * Four dimensional vector in homogeneous coordinates.
+ */
+typedef struct Vec4 {
+    float x;
+    float y;
+    float z;
+    float w;
+} Vec4;
+
+/**
+ * Color with RGB components.
+ */
+typedef struct ColorRGB {
+    float red;
+    float green;
+    float blue;
+} ColorRGB;
+
+/**
+ * Color with RGBA components.
+ */
+typedef struct ColorRGBA {
+    float red;
+    float green;
+    float blue;
+    float alpha;
+} ColorRGBA;
+
+/**
+ * Configuration for an object.
+ */
+typedef struct ObjectConfig {
+    char name[64];
+    char model_path[256];
+    char texture_path[256];
+    Vec3 position;
+    Vec3 rotation;
+    Vec3 scale;
+    bool is_static;
+} ObjectConfig;
+
+/**
+ * Light source with ambient, diffuse, specular color specifications and position.
+ */
+typedef struct Lighting {
+    ColorRGBA ambient;
+    ColorRGBA diffuse;
+    ColorRGBA specular;
+    Vec4 position;
+    float brightness;
+    bool enabled;
+    int slot;
+} Lighting;
+
+/**
+ * Material with ambient, diffuse, specular color specifications and shininess.
+ */
+typedef struct Material {
+    ColorRGB ambient;
+    ColorRGB diffuse;
+    ColorRGB specular;
+    float shininess;
+} Material;
+
+void scale_model(Model* model, Vec3 scale);
+
+void rotate_model(Model* model, Vec3 rotation);
+
+/**
+ * Calculate the bounding box of a model.
+ */
+void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max);
+
+/**
+ * Check if any of the x, y, z slabs of the object was hit.
+ */
+bool slab_hit(float origin, float dir, float min_box, float max_box, float *tmin, float *tmax);
+
+// float calculate_bottom_point(Object* obj);
+
+/**
+ * Set a light source of the scene.
+ */
+void set_lighting(int slot, const Lighting* light);
+
+/**
+ * Set the current material.
+ */
+void set_material(const Material* material);
+
+/**
+ * Draw the origin of the world coordinate system.
+ */
+void draw_origin(float size);
+
+/**
+ * Draw a checkerboard pattern on the ground.
+ */
+void draw_checkerboard(int size, float square_size);
+
+/**
+ * Draw the bounding box of a model.
+ */
+void draw_bounding_box(Object* obj);
+
+/**
+ * Apply a sine function to an RBG color based on time and light source index.
+ */
+ColorRGB sine_animate_color(float time, int index, float brightness);
+
+/**
+ * Get the min coordinates of 2 three dimensional vectors.
+ */
+Vec3 vec3_min(Vec3 a, Vec3 b);
+
+/**
+ * Get the max coordinates of 2 three dimensional vectors.
+ */
+Vec3 vec3_max(Vec3 a, Vec3 b);
+
+/**
+ * Multiply 2 three dimensional vectors.
+ */
+Vec3 vec3_multiply(Vec3 v, Vec3 scale);
+
+/**
+ * Add 2 three dimensional vectors.
+ */
+Vec3 vec3_add(Vec3 a, Vec3 b);
+
+/**
+ * Subtract 2 three dimensional vectors.
+ */
+Vec3 vec3_substract(Vec3 a, Vec3 b);
+
+/**
+ * Scale a three dimensional vector.
+ */
+Vec3 vec3_scale(Vec3 v, float scale);
+
+/**
+ * Get the dot product of 2 three dimensional vectors.
+ */
+float vec3_dot(Vec3 a, Vec3 b);
+
+/**
+ * Normalize a three dimensional vector.
+ */
+void vec3_normalize(Vec3* v);
+
+/**
+ * Calculate radian from degree.
+ */
+double degree_to_radian(double degree);
+
+
+#endif /* UTILS_H */
