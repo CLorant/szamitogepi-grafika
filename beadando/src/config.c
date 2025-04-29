@@ -16,10 +16,6 @@ char* trim(char* str) {
     return str;
 }
 
-bool parse_bool(const char* str) {
-    return (strcmp(str, "true") == 0 || strcmp(str, "1") == 0);
-}
-
 int parse_csv_line(char* line, char* tokens[], int max_tokens) {
     int count = 0;
     char* token = strtok(line, ",");
@@ -32,45 +28,46 @@ int parse_csv_line(char* line, char* tokens[], int max_tokens) {
     return count;
 }
 
-// Helper to parse a Vec3 from tokens
+bool parse_bool(const char* str) {
+    return (strcmp(str, "true") == 0 || strcmp(str, "1") == 0);
+}
+
 Vec3 parse_vec3(char* tokens[], int start_idx, Vec3 defaults) {
     Vec3 v = defaults;
     if (tokens[start_idx]) v.x = atof(tokens[start_idx]);
-    if (tokens[start_idx+1]) v.y = atof(tokens[start_idx+1]);
-    if (tokens[start_idx+2]) v.z = atof(tokens[start_idx+2]);
+    if (tokens[start_idx + 1]) v.y = atof(tokens[start_idx + 1]);
+    if (tokens[start_idx + 2]) v.z = atof(tokens[start_idx + 2]);
     return v;
 }
 
-// Helper to parse a Vec4 from tokens
 Vec4 parse_vec4(char* tokens[], int start_idx, Vec4 defaults) {
     Vec4 v = defaults;
     if (tokens[start_idx]) v.x = atof(tokens[start_idx]);
-    if (tokens[start_idx+1]) v.y = atof(tokens[start_idx+1]);
-    if (tokens[start_idx+2]) v.z = atof(tokens[start_idx+2]);
-    if (tokens[start_idx+3]) v.w = atof(tokens[start_idx+3]);
+    if (tokens[start_idx + 1]) v.y = atof(tokens[start_idx + 1]);
+    if (tokens[start_idx + 2]) v.z = atof(tokens[start_idx + 2]);
+    if (tokens[start_idx + 3]) v.w = atof(tokens[start_idx + 3]);
     return v;
 }
 
-// Helper to parse a Color from tokens
 ColorRGBA parse_color(char* tokens[], int start_idx, ColorRGBA defaults) {
     ColorRGBA c = defaults;
     if (tokens[start_idx]) c.red = atof(tokens[start_idx]);
-    if (tokens[start_idx+1]) c.green = atof(tokens[start_idx+1]);
-    if (tokens[start_idx+2]) c.blue = atof(tokens[start_idx+2]);
-    if (tokens[start_idx+3]) c.alpha = atof(tokens[start_idx+3]);
+    if (tokens[start_idx + 1]) c.green = atof(tokens[start_idx + 1]);
+    if (tokens[start_idx + 2]) c.blue = atof(tokens[start_idx + 2]);
+    if (tokens[start_idx + 3]) c.alpha = atof(tokens[start_idx + 3]);
     return c;
 }
 
 void read_object_config(const char* filename, ObjectConfig* obj_config, int* obj_config_count) {
     FILE* file = fopen(filename, "r");
     if (!file) {
-        perror("Failed to open model config file");
+        printf("[ERROR] Failed to open model config file.\n");
         return;
     }
 
     char line[1024];
     int line_num = 0;
-    char* tokens[32]; // Enough for all fields
+    char* tokens[32];
     
     Vec3 zero_vec = (Vec3){0, 0, 0};
     Vec3 unit_vec = (Vec3){1, 1, 1};
@@ -108,7 +105,7 @@ void read_object_config(const char* filename, ObjectConfig* obj_config, int* obj
 void read_light_config(const char* filename, Lighting* light_config, int* light_config_count) {
     FILE* file = fopen(filename, "r");
     if (!file) {
-        perror("Failed to open light config file");
+        printf("[ERROR] Failed to open light config file.\n");
         return;
     }
 
@@ -124,18 +121,15 @@ void read_light_config(const char* filename, Lighting* light_config, int* light_
         if (line_num == 1 || strlen(trim(line)) == 0) continue;
         
         int token_count = parse_csv_line(line, tokens, 32);
-        if (token_count < 16) continue;
+        if (token_count < 17) continue;
         
         Lighting config = {0};
-        
-        config.ambient = parse_color(tokens, 0, default_color);
-        config.diffuse = parse_color(tokens, 4, default_color);
-        config.specular = parse_color(tokens, 8, default_color);
-        config.position = parse_vec4(tokens, 12, default_position);
-        
-        if (token_count > 16) {
-            config.brightness = atof(tokens[16]);
-        }
+        strncpy(config.name, tokens[0], sizeof(config.name) - 1);
+        config.ambient = parse_color(tokens, 1, default_color);
+        config.diffuse = parse_color(tokens, 5, default_color);
+        config.specular = parse_color(tokens, 9, default_color);
+        config.position = parse_vec4(tokens, 13, default_position);
+        config.brightness = (token_count > 17) ? atof(tokens[17]) : 0.8f;
         
         light_config[(*light_config_count)++] = config;
     }
@@ -178,6 +172,7 @@ void print_light_configs(Lighting* light_config, int light_config_count) {
         Lighting config = light_config[i];
         
         printf("Light %d:\n", i + 1);
+        printf("  Name: %s\n", config.name);
         printf("  Ambient: [%.2f, %.2f, %.2f, %.2f]\n", 
                config.ambient.red, config.ambient.green, 
                config.ambient.blue, config.ambient.alpha);

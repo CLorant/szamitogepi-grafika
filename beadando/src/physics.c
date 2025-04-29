@@ -35,7 +35,7 @@ PhysicsWorld* init_physics(const dReal gravity[3]) {
     dInitODE2(0);
     PhysicsWorld* pw = (PhysicsWorld*)malloc(sizeof(PhysicsWorld));
     if (!pw) {
-        printf("[ERROR]: Physics initialization failed!\n");
+        printf("[ERROR] Physics initialization failed!\n");
         return NULL;
     }
 
@@ -247,6 +247,7 @@ void physics_draw_obb(PhysicsBody* pb) {
     };
 
     glDisable(GL_LIGHTING);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glColor3f(1.0f, 1.0f, 0.0f);
     glLineWidth(2.0f);
     glBegin(GL_LINES);
@@ -258,24 +259,6 @@ void physics_draw_obb(PhysicsBody* pb) {
     glEnd();
     glEnable(GL_LIGHTING);
     glLineWidth(1.0f);
-}
-
-void physics_get_aabb(PhysicsBody* body, Vec3* min, Vec3* max) {
-    if (!body || !body->body) return;
-
-    dGeomID geom = dBodyGetFirstGeom(body->body);
-    if (geom) {
-        dReal aabb[6];
-        dGeomGetAABB(geom, aabb);
-
-        min->x = aabb[0];
-        min->y = aabb[2];
-        min->z = aabb[4];
-
-        max->x = aabb[1];
-        max->y = aabb[3];
-        max->z = aabb[5];
-    }
 }
 
 void physics_get_position(PhysicsBody* pb, Vec3* position) {

@@ -13,10 +13,6 @@ A programot a R.E.P.O. nevű early access roguelite játék inspirálta. Az elne
 ### Cél
 A program célja, hogy a felhasználó tetszőleges mennyiségű tárgyat gyűjtsön össze, amelyeket a játék végén a gyűjtési ponton eladhat. A cél az adott érték elérése, de ezen felül is lehet értékesíteni. A nehézséget a tárgyak épségben tartása jelenti, mivel azok megsérülhetnek vagy összetörhetnek.
 
-> **Megjegyzés**
->
->  A cél változhat, ha végül nem áll rendelkezésre elég fejlesztési idő a játékmenet bővítéséhez. Ebben az esetben a játékmenet a fent leírtakkal zárul.
-
 ### Alapfunkcionalitások
 
 **Kamerakezelés:**
@@ -75,10 +71,5 @@ A program célja, hogy a felhasználó tetszőleges mennyiségű tárgyat gyűjt
 >
 > A többlet funkciók az alábbi elemekkel bővülhetnek, ha elegendő fejlesztési idő áll rendelkezésre:
 > 
-> **Megjelenés:**
-> - Árnyékok
+> - Részecskerendszerek
 > - Átlátszóság
-> 
-> **Játékmenet:**
-> - Bonyolultabb animációk
-> - Egyszerű ellenfél AI

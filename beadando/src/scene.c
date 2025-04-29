@@ -50,11 +50,10 @@ void init_scene(Scene* scene) {
 void add_light(Scene* scene, Lighting* config) {
     Lighting new_light = *config;
     new_light.enabled = true;
-    new_light.slot = GL_LIGHT0 + scene->light_count;
-    scene->lights[scene->light_count] = new_light;
+    new_light.slot = scene->light_count;
+    scene->lights[scene->light_count++] = new_light;
 
     glEnable(GL_LIGHT0 + new_light.slot);
-    scene->light_count++;
 }
 
 void add_object(Scene* scene, ObjectConfig* config) {
@@ -69,6 +68,7 @@ void add_object(Scene* scene, ObjectConfig* config) {
     obj->position = config->position;
     obj->rotation = config->rotation;
 
+    
     load_model(&obj->model, config->model_path);
 
     Vec3 mesh_min, mesh_max, center;
@@ -94,6 +94,15 @@ void add_object(Scene* scene, ObjectConfig* config) {
         (mesh_max.z - mesh_min.z) * 0.5f
     };
 
+    if (config->texture_path[0] != '\0') {
+        obj->texture_id = load_texture(config->texture_path);
+    }
+    else {
+        printf("[WARNING]: No texture set for object '%s'.\n", obj->name);
+        obj->texture_id = 0;
+    }
+    
+
     if (config->is_static) {
         dGeomID geom = dCreateBox(scene->physics_world->space, half_ext.x * 2, half_ext.y * 2, half_ext.z * 2);
         calculate_mesh_aabb(&obj->model, &mesh_min, &mesh_max);
@@ -110,6 +119,7 @@ void add_object(Scene* scene, ObjectConfig* config) {
         const dReal* pos = dGeomGetPosition(geom);
         obj->display_list = glGenLists(1);
         glNewList(obj->display_list, GL_COMPILE);
+            glBindTexture(GL_TEXTURE_2D, obj->texture_id);
             glPushMatrix();
                 glTranslatef(pos[0], pos[1], pos[2]);
                 draw_model(&obj->model);
@@ -127,16 +137,9 @@ void add_object(Scene* scene, ObjectConfig* config) {
     
         obj->display_list = glGenLists(1);
         glNewList(obj->display_list, GL_COMPILE);
+            glBindTexture(GL_TEXTURE_2D, obj->texture_id);
             draw_model(&obj->model);
         glEndList();
-    }
-
-    if (config->texture_path[0] != '\0') {
-        obj->texture_id = load_texture(config->texture_path);
-    }
-    else {
-        printf("[WARNING]: No texture set for object '%s'.\n", obj->name);
-        obj->texture_id = 0;
     }
     
     scene->object_count++;
@@ -203,27 +206,33 @@ void adjust_brightness(Scene* scene, float amount) {
     }
 }
 
-void update_scene(Scene* scene, double elapsed_time) {
-    static float total_time = 0.0f;
-    total_time += elapsed_time;
-    
+void update_lighting(Scene* scene, float total_time) {
     for (int i = 0; i < scene->light_count; i++) {
         if (!scene->lights[i].enabled) continue;
 
-        ColorRGB c = sine_animate_color(total_time, i, scene->lights[i].brightness);
-        scene->lights[i].diffuse = (ColorRGBA){ c.red, c.green, c.blue, 1.0f };
+        if (strcmp(scene->lights[i].name, "disco") == 0) {
+            ColorRGB c = sine_animate_color(total_time, i);
+            scene->lights[i].diffuse = (ColorRGBA){ c.red, c.green, c.blue, 1.0f };
+        }
     }
-    
+}
+
+void update_scene(Scene* scene, double elapsed_time) {
+    static float total_time = 0.0f;
+    total_time += elapsed_time;
+
+    update_lighting(scene, total_time);
     physics_simulate(scene->physics_world, elapsed_time);
     sync_physics_transforms(scene);
 }
 
 void render_scene(const Scene* scene) {
     glDisable(GL_LIGHTING);
+        glBindTexture(GL_TEXTURE_2D, 0);
         draw_origin(1);
         draw_checkerboard(4, 1);
     glEnable(GL_LIGHTING);
-
+    
     set_material(&scene->material);
 
     for (int i = 0; i < scene->light_count; i++) {
@@ -256,7 +265,6 @@ void render_scene(const Scene* scene) {
             glRotatef(obj->rotation.y, 0, 1, 0);
             glRotatef(obj->rotation.z, 0, 0, 1);
 
-            glBindTexture(GL_TEXTURE_2D, obj->texture_id);
             glCallList(obj->display_list);
         }
 
@@ -288,9 +296,6 @@ int select_object_at(Scene* scene, Camera* cam, int mx, int my) {
     for (int i = 0; i < scene->object_count; ++i) {
         Object* obj = &scene->objects[i];
         if (!obj->is_active || obj->is_static) continue;
-
-        Vec3 min, max;
-        physics_get_aabb(&obj->physics_body, &min, &max);
 
         float t;
         if (ray_intersect_obb(cam->position, dir, &obj->physics_body, &t) && t < best) {

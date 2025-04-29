@@ -20,7 +20,7 @@ typedef struct Object {
     Vec3 rotation;
     Material* material;
     PhysicsBody physics_body;
-    GLuint texture_id;
+    GLuint texture_id; // maybe the scene struct should have this field?
     GLuint display_list;
 } Object;
 

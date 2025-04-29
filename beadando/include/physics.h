@@ -111,11 +111,6 @@ bool ray_intersect_obb(Vec3 ray_o, Vec3 ray_d, PhysicsBody* pb, float* tmin_out)
 void physics_draw_obb(PhysicsBody* pb);
 
 /**
- * Get the Axis Aligned Bounding Box an object.
- */
-void physics_get_aabb(PhysicsBody* pb, Vec3* min, Vec3* max);
-
-/**
  * Simplified physics API.
  */
 void physics_get_position(PhysicsBody* pb, Vec3* position);

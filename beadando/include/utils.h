@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define EPSILON 1e-6f
-#define MAX_LIGHTS 16 // For config loading, GL limit is 8
+#define MAX_LIGHTS 8
 #define MAX_OBJECTS 64
 
 typedef struct Object Object;
@@ -65,13 +65,14 @@ typedef struct ObjectConfig {
  * Light source with ambient, diffuse, specular color specifications and position.
  */
 typedef struct Lighting {
+    int slot;
+    char name[64];
     ColorRGBA ambient;
     ColorRGBA diffuse;
     ColorRGBA specular;
     Vec4 position;
     float brightness;
     bool enabled;
-    int slot;
 } Lighting;
 
 /**
@@ -84,8 +85,14 @@ typedef struct Material {
     float shininess;
 } Material;
 
+/**
+ * Scale the vertices of a model.
+ */
 void scale_model(Model* model, Vec3 scale);
 
+/**
+ * Rotate the vertices of a model.
+ */
 void rotate_model(Model* model, Vec3 rotation);
 
 /**
@@ -97,8 +104,6 @@ void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max);
  * Check if any of the x, y, z slabs of the object was hit.
  */
 bool slab_hit(float origin, float dir, float min_box, float max_box, float *tmin, float *tmax);
-
-// float calculate_bottom_point(Object* obj);
 
 /**
  * Set a light source of the scene.
@@ -128,7 +133,7 @@ void draw_bounding_box(Object* obj);
 /**
  * Apply a sine function to an RBG color based on time and light source index.
  */
-ColorRGB sine_animate_color(float time, int index, float brightness);
+ColorRGB sine_animate_color(float time, int index);
 
 /**
  * Get the min coordinates of 2 three dimensional vectors.

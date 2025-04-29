@@ -94,9 +94,9 @@ void set_lighting(int slot, const Lighting* light) {
     };
 
     float diffuse_light[] = {
-        light->diffuse.red,
-        light->diffuse.green,
-        light->diffuse.blue,
+        light->diffuse.red * light->brightness,
+        light->diffuse.green * light->brightness,
+        light->diffuse.blue * light->brightness,
         light->ambient.alpha
     };
 
@@ -189,14 +189,10 @@ void draw_checkerboard(int size, float square_size) {
     glEnd();
 }
 
-ColorRGB sine_animate_color(float time, int index, float brightness) {
+ColorRGB sine_animate_color(float time, int index) {
     float r = (sinf(time * 0.5f + index * 2.0f) + 1.0f) * 0.5f;
     float g = (sinf(time * 0.8f + index * 3.0f) + 1.0f) * 0.5f;
     float b = (sinf(time * 1.2f + index * 4.0f) + 1.0f) * 0.5f;
-
-    r *= brightness;
-    g *= brightness;
-    b *= brightness;
 
     ColorRGB out = {
         .red = fminf(r, 1.0f),
