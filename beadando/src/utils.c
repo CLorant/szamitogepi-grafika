@@ -83,6 +83,16 @@ bool slab_hit(float origin, float dir, float min_box, float max_box, float* tmin
     return *tmax > *tmin;
 }
 
+void get_delta(int dir, int* dx, int* dy) {
+    switch (dir) {
+      case DIR_NORTH: *dx =  0; *dy =  1; break;
+      case DIR_EAST:  *dx =  1; *dy =  0; break;
+      case DIR_SOUTH: *dx =  0; *dy = -1; break;
+      case DIR_WEST:  *dx = -1; *dy =  0; break;
+      default:        *dx =  0; *dy =  0; break;
+    }
+}
+
 void set_lighting(int slot, const Lighting* light) {
     GLenum light_enum = GL_LIGHT0 + slot;
 
@@ -144,6 +154,179 @@ void set_material(const Material* material) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular_color);
 
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &(material->shininess));
+}
+
+void draw_room(Room* room) {
+    float w = room->dimension.x * 0.5f;
+    float l = room->dimension.y * 0.5f;
+    float h = room->dimension.z;
+    float px = room->position.x;
+    float py = room->position.y;
+    float pz = room->position.z;
+
+    float door_h = room->door_height;
+    float half_w = w * 0.5f;
+    float half_d = room->door_width * 0.5f;
+
+    glBindTexture(GL_TEXTURE_2D, room->floor_tex);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex3f(px - w, py - l, pz);
+    glTexCoord2f(1, 0); glVertex3f(px + w, py - l, pz);
+    glTexCoord2f(1, 1); glVertex3f(px + w, py + l, pz);
+    glTexCoord2f(0, 1); glVertex3f(px - w, py + l, pz);
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, room->ceiling_tex);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex3f(px - w, py - l, pz + h);
+    glTexCoord2f(1, 0); glVertex3f(px + w, py - l, pz + h);
+    glTexCoord2f(1, 1); glVertex3f(px + w, py + l, pz + h);
+    glTexCoord2f(0, 1); glVertex3f(px - w, py + l, pz + h);
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, room->wall_tex);
+
+    float v0 = 0.0f;
+    float v1 = door_h / h;
+    float u0 = 0.0f;
+    float u1, u2;
+    float u3 = 1.0f;
+
+    if (!room->opening[DIR_NORTH]) {
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(px - w, py + l, pz);
+        glTexCoord2f(1, 0); glVertex3f(px + w, py + l, pz);
+        glTexCoord2f(1, 1); glVertex3f(px + w, py + l, pz + h);
+        glTexCoord2f(0, 1); glVertex3f(px - w, py + l, pz + h);
+        glEnd();
+    }
+    else {
+        u1 = (half_w - half_d) / w;
+        u2 = (half_w + half_d) / w;
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v1); glVertex3f(px - w, py + l, pz + door_h);
+        glTexCoord2f(u3, v1); glVertex3f(px + w, py + l, pz + door_h);
+        glTexCoord2f(u3, 1); glVertex3f(px + w, py + l, pz + h);
+        glTexCoord2f(u0, 1); glVertex3f(px - w, py + l, pz + h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v0); glVertex3f(px - w, py + l, pz);
+        glTexCoord2f(u1, v0); glVertex3f(px - half_d, py + l, pz);
+        glTexCoord2f(u1, v1); glVertex3f(px - half_d, py + l, pz + door_h);
+        glTexCoord2f(u0, v1); glVertex3f(px - w, py + l, pz + door_h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u2, v0); glVertex3f(px + half_d, py + l, pz);
+        glTexCoord2f(u3, v0); glVertex3f(px + w, py + l, pz);
+        glTexCoord2f(u3, v1); glVertex3f(px + w, py + l, pz + door_h);
+        glTexCoord2f(u2, v1); glVertex3f(px + half_d, py + l, pz + door_h);
+        glEnd();
+    }
+
+    if (!room->opening[DIR_EAST]) {
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(px + w, py - l, pz);
+        glTexCoord2f(1, 0); glVertex3f(px + w, py + l, pz);
+        glTexCoord2f(1, 1); glVertex3f(px + w, py + l, pz + h);
+        glTexCoord2f(0, 1); glVertex3f(px + w, py - l, pz + h);
+        glEnd();
+    }
+    else {
+        u1 = (l - half_d) / (2 * l);
+        u2 = (l + half_d) / (2 * l);
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v1); glVertex3f(px + w, py - l, pz + door_h);
+        glTexCoord2f(u3, v1); glVertex3f(px + w, py + l, pz + door_h);
+        glTexCoord2f(u3, 1); glVertex3f(px + w, py + l, pz + h);
+        glTexCoord2f(u0, 1); glVertex3f(px + w, py - l, pz + h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v0); glVertex3f(px + w, py - l, pz);
+        glTexCoord2f(u1, v0); glVertex3f(px + w, py - half_d, pz);
+        glTexCoord2f(u1, v1); glVertex3f(px + w, py - half_d, pz + door_h);
+        glTexCoord2f(u0, v1); glVertex3f(px + w, py - l, pz + door_h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u2, v0); glVertex3f(px + w, py + half_d, pz);
+        glTexCoord2f(u3, v0); glVertex3f(px + w, py + l, pz);
+        glTexCoord2f(u3, v1); glVertex3f(px + w, py + l, pz + door_h);
+        glTexCoord2f(u2, v1); glVertex3f(px + w, py + half_d, pz + door_h);
+        glEnd();
+    }
+
+    if (!room->opening[DIR_SOUTH]) {
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(px + w, py - l, pz);
+        glTexCoord2f(1, 0); glVertex3f(px - w, py - l, pz);
+        glTexCoord2f(1, 1); glVertex3f(px - w, py - l, pz + h);
+        glTexCoord2f(0, 1); glVertex3f(px + w, py - l, pz + h);
+        glEnd();
+    }
+    else {
+        u1 = (w - half_d) / (2 * w);
+        u2 = (w + half_d) / (2 * w);
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v1); glVertex3f(px + w, py - l, pz + door_h);
+        glTexCoord2f(u3, v1); glVertex3f(px - w, py - l, pz + door_h);
+        glTexCoord2f(u3, 1); glVertex3f(px - w, py - l, pz + h);
+        glTexCoord2f(u0, 1); glVertex3f(px + w, py - l, pz + h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v0); glVertex3f(px + w, py - l, pz);
+        glTexCoord2f(u1, v0); glVertex3f(px + half_d, py - l, pz);
+        glTexCoord2f(u1, v1); glVertex3f(px + half_d, py - l, pz + door_h);
+        glTexCoord2f(u0, v1); glVertex3f(px + w, py - l, pz + door_h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u2, v0); glVertex3f(px - half_d, py - l, pz);
+        glTexCoord2f(u3, v0); glVertex3f(px - w, py - l, pz);
+        glTexCoord2f(u3, v1); glVertex3f(px - w, py - l, pz + door_h);
+        glTexCoord2f(u2, v1); glVertex3f(px - half_d, py - l, pz + door_h);
+        glEnd();
+    }
+
+    if (!room->opening[DIR_WEST]) {
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(px - w, py + l, pz);
+        glTexCoord2f(1, 0); glVertex3f(px - w, py - l, pz);
+        glTexCoord2f(1, 1); glVertex3f(px - w, py - l, pz + h);
+        glTexCoord2f(0, 1); glVertex3f(px - w, py + l, pz + h);
+        glEnd();
+    }
+    else {
+        u1 = (l - half_d) / (2 * l);
+        u2 = (l + half_d) / (2 * l);
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v1); glVertex3f(px - w, py + l, pz + door_h);
+        glTexCoord2f(u3, v1); glVertex3f(px - w, py - l, pz + door_h);
+        glTexCoord2f(u3, 1); glVertex3f(px - w, py - l, pz + h);
+        glTexCoord2f(u0, 1); glVertex3f(px - w, py + l, pz + h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v0); glVertex3f(px - w, py + l, pz);
+        glTexCoord2f(u1, v0); glVertex3f(px - w, py + half_d, pz);
+        glTexCoord2f(u1, v1); glVertex3f(px - w, py + half_d, pz + door_h);
+        glTexCoord2f(u0, v1); glVertex3f(px - w, py + l, pz + door_h);
+        glEnd();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u2, v0); glVertex3f(px - w, py - half_d, pz);
+        glTexCoord2f(u3, v0); glVertex3f(px - w, py - l, pz);
+        glTexCoord2f(u3, v1); glVertex3f(px - w, py - l, pz + door_h);
+        glTexCoord2f(u2, v1); glVertex3f(px - w, py - half_d, pz + door_h);
+        glEnd();
+    }
 }
 
 void draw_origin(float size) {
@@ -243,4 +426,3 @@ void vec3_normalize(Vec3* v) {
 double degree_to_radian(double degree) {
     return degree * M_PI / 180.0;
 }
-

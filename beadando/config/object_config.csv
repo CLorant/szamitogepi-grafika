@@ -1,8 +1,0 @@
-name,model_path,texture_path,pos_x,pos_y,pos_z,rot_x,rot_y,rot_z,scale_x,scale_y,scale_z,is_static
-cat,assets/models/cat.obj,NA,0,2,0,90,0,0,1,1,1,false
-cube,assets/models/cube.obj,assets/textures/cube.png,2,0,1,90,0,0,0.5,0.5,0.5,false
-deer,assets/models/deer.obj,NA,2,2,1,90,0,0,0.15,0.15,0.15,false
-duck,assets/models/duck.obj,assets/textures/duck.jpg,0,-2,0,0,0,0,0.25,0.25,0.25,false
-gun,assets/models/gun.obj,NA,-4,-4,1,90,0,0,0.25,0.25,0.25,false
-house,assets/models/house.obj,NA,10,0,0,90,0,0,0.025,0.025,0.025,true
-raptor,assets/models/raptor.obj,assets/textures/raptor.png,-2,0,0,0,0,0,1.5,1.5,1.5,false

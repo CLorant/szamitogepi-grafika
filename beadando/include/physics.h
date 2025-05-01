@@ -35,15 +35,6 @@ typedef struct PhysicsBody {
 } PhysicsBody;
 
 /**
- * Bounding specification (for later).
- */
-typedef enum PhysicsShapeType {
-    PHYSICS_BOX,
-    PHYSICS_SPHERE,
-    PHYSICS_CAPSULE
-} PhysicsShapeType;
-
-/**
  * Physics simulation and contact parameters
  */
 typedef struct PhysicsConfig {
@@ -78,12 +69,17 @@ void physics_apply_config(PhysicsWorld* pw, PhysicsConfig* cfg);
 /**
  * Add a dynamic or static box.
  */
-PhysicsBody physics_create_box(PhysicsWorld* pw, double mass, Vec3 pos, Vec3 half_extents);
+void physics_create_box(PhysicsWorld* pw, PhysicsBody* pb, double mass, Vec3 pos, Vec3 half_extents);
 
 /**
- * Add a dynamic or static sphere.
+ * Create a flat bounding wall.
  */
-PhysicsBody physics_create_sphere(PhysicsWorld* pw, double mass, Vec3 pos, double radius);
+void physics_create_wall_filled(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float thickness);
+
+/**
+ * Create three separate bounding walls: left, top, right, leaving a door sized hole.
+ */
+void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float wall_thickness, float door_width, float door_height);
 
 /**
  * Add an infinite static ground plane.

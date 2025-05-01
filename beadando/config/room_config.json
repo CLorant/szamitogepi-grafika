@@ -1,0 +1,55 @@
+[
+    {
+        "name": "start_room",
+        "dimension": [7.0, 7.0, 4.0],
+        "floor_tex": "assets/textures/floor.jpg",
+        "ceiling_tex": "assets/textures/ceiling.jpg",
+        "wall_tex": "assets/textures/wall.jpg",
+        "connections": [
+            { "room": "ns_corridor", "dir": "north"}
+        ]
+    },
+    {
+        "name": "ns_corridor",
+        "dimension": [2.0, 6.0, 2.5],
+        "floor_tex": "assets/textures/floor.jpg",
+        "ceiling_tex": "assets/textures/ceiling.jpg",
+        "wall_tex": "assets/textures/wall.jpg",
+        "connections": [
+            { "room": "start_room",  "dir": "south" },
+            { "room": "final_room",  "dir": "north" },
+            { "room": "e_corridor",  "dir": "east" }
+        ]
+    },
+    {
+        "name": "e_corridor",
+        "dimension": [6.0, 2.0, 2.5],
+        "floor_tex": "assets/textures/floor.jpg",
+        "ceiling_tex": "assets/textures/ceiling.jpg",
+        "wall_tex": "assets/textures/wall.jpg",
+        "connections": [
+            { "room": "ns_corridor",  "dir": "west" },
+            { "room": "disco_room",  "dir": "east" }
+        ]
+    },
+    {
+        "name": "disco_room",
+        "dimension": [4.0, 4.0, 4.0],
+        "floor_tex": "assets/textures/floor.jpg",
+        "ceiling_tex": "assets/textures/ceiling.jpg",
+        "wall_tex": "assets/textures/wall.jpg",
+        "connections": [
+            { "room": "e_corridor", "dir": "west" }
+        ]
+    },
+    {
+        "name": "final_room",
+        "dimension": [10.0, 10.0, 4.0],
+        "floor_tex": "assets/textures/floor.jpg",
+        "ceiling_tex": "assets/textures/ceiling.jpg",
+        "wall_tex": "assets/textures/wall.jpg",
+        "connections": [
+            { "room": "ns_corridor", "dir": "south" }
+        ]
+    }
+]

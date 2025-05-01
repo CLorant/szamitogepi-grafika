@@ -7,8 +7,10 @@
 #define EPSILON 1e-6f
 #define MAX_LIGHTS 8
 #define MAX_OBJECTS 64
+#define MAX_ROOMS 32
 
 typedef struct Object Object;
+typedef struct Room Room;
 
 /**
  * GLSL-like three dimensional vector.
@@ -49,17 +51,23 @@ typedef struct ColorRGBA {
 } ColorRGBA;
 
 /**
- * Configuration for an object.
+ * Direction enum with counter
  */
-typedef struct ObjectConfig {
-    char name[64];
-    char model_path[256];
-    char texture_path[256];
-    Vec3 position;
-    Vec3 rotation;
-    Vec3 scale;
-    bool is_static;
-} ObjectConfig;
+typedef enum Direction {
+    DIR_NORTH,
+    DIR_EAST,
+    DIR_SOUTH,
+    DIR_WEST,
+    DIR_COUNT
+} Direction;
+
+/**
+ * Room connections
+ */
+typedef struct RoomConn {
+    char room[64];
+    int dir;
+} RoomConn;
 
 /**
  * Light source with ambient, diffuse, specular color specifications and position.
@@ -106,6 +114,11 @@ void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max);
 bool slab_hit(float origin, float dir, float min_box, float max_box, float *tmin, float *tmax);
 
 /**
+ * Get the delta (-1, 0, 1) of a direction.
+ */
+void get_delta(int dir, int* dx, int* dy);
+
+/**
  * Set a light source of the scene.
  */
 void set_lighting(int slot, const Lighting* light);
@@ -114,6 +127,11 @@ void set_lighting(int slot, const Lighting* light);
  * Set the current material.
  */
 void set_material(const Material* material);
+
+/**
+ * Draw a room of the scene.
+ */
+void draw_room(Room* room);
 
 /**
  * Draw the origin of the world coordinate system.
@@ -179,6 +197,5 @@ void vec3_normalize(Vec3* v);
  * Calculate radian from degree.
  */
 double degree_to_radian(double degree);
-
 
 #endif /* UTILS_H */

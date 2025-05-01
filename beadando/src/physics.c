@@ -16,7 +16,7 @@ static void near_callback(void* data, dGeomID o1, dGeomID o2) {
 
     dContact contact[MAX_CONTACTS];
     for (int i = 0; i < MAX_CONTACTS; ++i) {
-        contact[i].surface.mode = dContactSoftERP | dContactSoftCFM | dContactApprox1;
+        contact[i].surface.mode = dContactApprox1;
         contact[i].surface.mu = pw->surface_friction;
         contact[i].surface.bounce = pw->bounce;
         contact[i].surface.bounce_vel = 0.1;
@@ -63,7 +63,7 @@ void physics_destroy(PhysicsWorld* pw) {
 
 PhysicsConfig physics_default_config() {
     PhysicsConfig cfg = {
-        .erp = 0.2,
+        .erp = 1.0,
         .cfm = 0.0001,
         .linear_damping = 0.01,
         .angular_damping = 0.05,
@@ -72,7 +72,7 @@ PhysicsConfig physics_default_config() {
         .auto_disable_linear_threshold = 0.01,
         .auto_disable_angular_threshold = 0.01,
         .auto_disable_steps = 10,
-        .quick_step_iterations = 20
+        .quick_step_iterations = 50
     };
     return cfg;
 }
@@ -97,49 +97,141 @@ void physics_apply_config(PhysicsWorld* pw, PhysicsConfig* cfg) {
     dWorldSetQuickStepNumIterations(pw->world, cfg->quick_step_iterations);
 }
 
-PhysicsBody physics_create_box(PhysicsWorld* pw, double mass, Vec3 pos, Vec3 half_extents) {
-    PhysicsBody pb = { 0 };
-    pb.body = dBodyCreate(pw->world);
-    pb.dimensions = half_extents;
-    dMass m; dMassSetZero(&m);
+void physics_create_box(PhysicsWorld* pw, PhysicsBody* pb, double mass, Vec3 pos, Vec3 half_extents) {
+    pb->body = dBodyCreate(pw->world);
+    pb->dimensions = half_extents;
+    dMass m;
+    dMassSetZero(&m);
     dMassSetBoxTotal(&m, mass > 0 ? mass : 1.0,
         half_extents.x * 2,
         half_extents.y * 2,
         half_extents.z * 2);
-    dBodySetMass(pb.body, &m);
-    dBodySetPosition(pb.body, pos.x, pos.y, pos.z);
-    pb.geom = dCreateBox(pw->space,
+    dBodySetMass(pb->body, &m);
+    dBodySetPosition(pb->body, pos.x, pos.y, pos.z);
+    
+    pb->geom = dCreateBox(pw->space,
         half_extents.x * 2,
         half_extents.y * 2,
         half_extents.z * 2);
-    dGeomSetBody(pb.geom, pb.body);
-    pb.is_active = true;
-    return pb;
+    dGeomSetBody(pb->geom, pb->body);
+    pb->is_active = true;
 }
 
-PhysicsBody physics_create_sphere(PhysicsWorld* pw, double mass, Vec3 pos, double radius) {
-    PhysicsBody pb = { .user_data = NULL };
+void physics_create_wall_filled(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float thickness) {
+    float w = dim.x * 0.5f;
+    float l = dim.y * 0.5f;
+    float h = dim.z;
 
-    pb.body = dBodyCreate(pw->world);
-    pb.dimensions = (Vec3){ radius * 2, radius * 2, radius * 2 };
+    float dx, dy, dz;
+    Vec3 pos = center;
 
-    dMass m; dMassSetZero(&m);
-    if (mass <= 0) {
-        dMassSetSphereTotal(&m, 1.0, radius);
-        dBodySetMass(pb.body, &m);
-        dBodyDisable(pb.body);
+    if (dir == DIR_NORTH) {
+        dx = dim.x;
+        dy = thickness;
+        dz = h;
+        pos.y += l + (thickness * 0.5f);
+        pos.z += h * 0.5f;
     }
-    else {
-        dMassSetSphereTotal(&m, mass, radius);
-        dBodySetMass(pb.body, &m);
+    if (dir == DIR_SOUTH) {
+        dx = dim.x;
+        dy = thickness;
+        dz = h;
+        pos.y -= (l + thickness * 0.5f);
+        pos.z += h * 0.5f;
+    }
+    if (dir == DIR_EAST) {
+        dx = thickness;
+        dy = dim.y;
+        dz = h;
+        pos.x += (w + thickness * 0.5f);
+        pos.z += h * 0.5f;
+    }
+    if (dir == DIR_WEST) {
+        dx = thickness;
+        dy = dim.y;
+        dz = h;
+        pos.x -= (w + thickness * 0.5f);
+        pos.z += h * 0.5f;
     }
 
-    dBodySetPosition(pb.body, pos.x, pos.y, pos.z);
-    pb.geom = dCreateSphere(pw->space, radius);
-    dGeomSetBody(pb.geom, pb.body);
+    dGeomID box = dCreateBox(space, dx, dy, dz);
+    dGeomSetPosition(box, pos.x, pos.y, pos.z);
+}
 
-    pb.is_active = true; pb.is_sleeping = false;
-    return pb;
+void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float wall_thickness, float door_width, float door_height) {
+    Vec3 pos;
+    dGeomID geom;
+    float wall_x, wall_y;
+    float w = dim.x * 0.5f;
+    float l = dim.y * 0.5f;
+    float h = dim.z;
+    float jamb_w = (dim.x - door_width) * 0.5f;
+    float jamb_l = (dim.y - door_width) * 0.5f;
+    float t2 = wall_thickness * 0.5f;
+
+    if (dir == DIR_NORTH) {
+        wall_y = center.y + l + t2;
+
+        pos = (Vec3){ center.x, wall_y, center.z + door_height + (h - door_height) * 0.5f };
+        geom = dCreateBox(space, door_width, wall_thickness, (h - door_height));
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+
+        pos = (Vec3){ center.x - (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f };
+        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+
+        pos = (Vec3){ center.x + (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f };
+        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+    }
+
+    if (dir == DIR_EAST) {
+        wall_x = center.x + w + t2;
+        
+        pos = (Vec3){ wall_x, center.y, center.z + door_height + (h - door_height) * 0.5f };
+        geom = dCreateBox(space, wall_thickness, door_width, (h - door_height));
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+
+        pos = (Vec3){ wall_x, center.y - (l - jamb_l * 0.5f), center.z + door_height * 0.5f };
+        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+
+        pos = (Vec3){ wall_x, center.y + (l - jamb_l * 0.5f), center.z + door_height * 0.5f };
+        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+    }
+
+    if (dir == DIR_SOUTH) {
+        wall_y = center.y - l - t2;
+
+        pos = (Vec3){ center.x, wall_y, center.z + door_height + (h - door_height) * 0.5f };
+        geom = dCreateBox(space, door_width, wall_thickness, (h - door_height));
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+
+        pos = (Vec3){ center.x - (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f};
+        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+        
+        pos = (Vec3){center.x + (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f};
+        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+    }
+
+    if (dir == DIR_WEST) {
+        wall_x = center.x - w - t2;
+
+        pos = (Vec3){ wall_x, center.y, center.z + door_height + (h - door_height) * 0.5f };
+        geom = dCreateBox(space, wall_thickness, door_width, (h - door_height));
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+
+        pos = (Vec3){wall_x, center.y - (l - jamb_l * 0.5f), center.z + door_height * 0.5f};
+        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+        
+        pos = (Vec3){wall_x, center.y + (l - jamb_l * 0.5f), center.z + door_height * 0.5f};
+        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        dGeomSetPosition(geom, pos.x, pos.y, pos.z);
+    }
 }
 
 void physics_create_ground_plane(PhysicsWorld* pw) {

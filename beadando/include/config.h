@@ -4,20 +4,54 @@
 #include "utils.h"
 
 /**
- * Read the configuration CSV for objects.
+ * Configuration for an object.
  */
-void read_object_config(const char* filename, ObjectConfig* obj_config, int* obj_config_count);
+typedef struct ObjectConfig {
+    char name[64];
+    char model_path[256];
+    char texture_path[256];
+    Vec3 offset;
+    Vec3 rotation;
+    Vec3 scale;
+    float mass;
+    int value;
+    char room_name[64];
+    bool is_static;
+} ObjectConfig;
 
 /**
- * Read the configuration CSV for lights.
+ * Configuration for a room.
+ */
+typedef struct RoomConfig {
+    char name[64];
+    Vec3 dimension;
+    char floor_tex_path[256];
+    char ceiling_tex_path[256];
+    char wall_tex_path[256];
+    RoomConn* connections;
+    int connection_count;
+} RoomConfig;
+
+/**
+ * Read the configuration file for lights.
  */
 void read_light_config(const char* filename, Lighting* light_config, int* light_config_count);
 
 /**
+ * Read the configuration file for rooms.
+ */
+void read_room_config(const char* filename, RoomConfig* room_config, int* room_config_count);
+
+/**
+ * Read the configuration file for objects.
+ */
+void read_object_config(const char* filename, ObjectConfig* obj_config, int* obj_config_count);
+
+/**
  * Verifying configs.
  */
-void print_object_configs(ObjectConfig* obj_config, int obj_config_count);
-
 void print_light_configs(Lighting* light_config, int light_config_count);
+void print_room_configs(RoomConfig* room_config, int room_config_count);
+void print_object_configs(ObjectConfig* obj_config, int obj_config_count);
 
 #endif

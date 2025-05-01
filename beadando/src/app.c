@@ -130,29 +130,13 @@ void handle_app_events(App* app) {
             case SDL_SCANCODE_D:
                 set_camera_side_speed(&(app->camera), -1);
                 break;
+            /// TODO: Decide to keep or not
             case SDL_SCANCODE_Q:
-                if (app->camera.is_orbital) {
-                    app->camera.orbital_radius -= 0.1;
-
-                    if (app->camera.orbital_radius < 1.0) {
-                        app->camera.orbital_radius = 1.0;
-                    }
-                }
-                else {
-                    set_camera_vertical_speed(&(app->camera), 1);
-                }
+                set_camera_vertical_speed(&(app->camera), 1);
                 break;
+            /// TODO: Decide to keep or not
             case SDL_SCANCODE_E:
-                if (app->camera.is_orbital) {
-                    app->camera.orbital_radius += 0.1;
-
-                    if (app->camera.orbital_radius > 10.0) {
-                        app->camera.orbital_radius = 10.0;
-                    }
-                }
-                else {
-                    set_camera_vertical_speed(&(app->camera), -1);
-                }
+                set_camera_vertical_speed(&(app->camera), -1);
                 break;
             case SDL_SCANCODE_F2:
                 adjust_fov(&app->camera, -5.0f);
@@ -199,10 +183,6 @@ void handle_app_events(App* app) {
             case SDL_SCANCODE_E:
                 set_camera_vertical_speed(&(app->camera), 0);
                 break;
-            case SDL_SCANCODE_J:
-            case SDL_SCANCODE_L:
-                set_camera_speed(&(app->camera), 0);
-                break;
             default:
                 break;
             }
@@ -232,7 +212,20 @@ void handle_app_events(App* app) {
             app->scene.selected_object_id = -1;
             break;
         case SDL_MOUSEWHEEL: {
-            handle_mouse_wheel(app, event.wheel.y);
+            if (app->camera.is_orbital) {
+                app->camera.orbital_radius += event.wheel.y;
+
+                if (app->camera.orbital_radius < 1.0) {
+                    app->camera.orbital_radius = 1.0;
+                }
+                else if (app->camera.orbital_radius > 20.0) {
+                    app->camera.orbital_radius = 20.0;
+                }
+            }
+            else {
+                handle_mouse_wheel(app, event.wheel.y);
+            }
+            
         } break;
         case SDL_QUIT:
             app->is_running = false;

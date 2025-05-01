@@ -1,3 +1,0 @@
-name,ambient_r,ambient_g,ambient_b,ambient_a,diffuse_r,diffuse_g,diffuse_b,diffuse_a,specular_r,specular_g,specular_b,specular_a,pos_x,pos_y,pos_z,pos_w,brightness
-global,1.0,0.0,0.0,1.0,0.8,0.8,0.8,1.0,0.0,0.0,1.0,1.0,1.0,5.0,10.0,1.0,0.8
-disco,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0, 3.0,3.0,3.0,1.0,1.0

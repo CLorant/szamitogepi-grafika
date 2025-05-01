@@ -3,12 +3,10 @@
 
 #include "camera.h"
 #include "scene.h"
-
 #include <ode/ode.h>
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-
 #include <stdbool.h>
 
 #define VIEWPORT_ASPECT 50.0

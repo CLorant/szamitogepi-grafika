@@ -3,10 +3,11 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <math.h>
+#include <stdio.h>
 
 void init_camera(Camera* camera) {
     camera->position = (Vec3){0.0, 0.0, 1.0};
-    camera->rotation = (Vec3){0.0, 0.0, 0.0};
+    camera->rotation = (Vec3){0.0, 0.0, 360.0};
     camera->speed = (Vec3){0.0, 0.0, 0.0};
     camera->rotation_speed = (Vec3){0.0, 0.0, 0.0};
     camera->viewport = (Viewport){0, 0, 0, 0};
@@ -51,7 +52,7 @@ void set_view(const Camera* camera) {
         float y = camera->orbital_radius * sin(azimuth) * cos(elevation);
         float z = camera->orbital_radius * sin(elevation);
 
-        gluLookAt(x, y, z, 0, 0, 0, 0, 0, 1);
+        gluLookAt(x, y, z, camera->position.x, camera->position.y, camera->position.z, 0, 0, 1);
     }
     else {
         glRotatef(-(camera->rotation.x + 90), 1.0, 0, 0);

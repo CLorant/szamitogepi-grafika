@@ -1,11 +1,13 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include "config.h"
 #include "camera.h"
 #include "texture.h"
 #include "utils.h"
 #include "physics.h"
 #include <obj/model.h>
+#include <limits.h>
 
 /**
  * An object of the scene.
@@ -15,22 +17,53 @@ typedef struct Object {
     char name[64];
     bool is_active;
     bool is_static;
+    int value;
     Model model;
     Vec3 position;
     Vec3 rotation;
     Material* material;
     PhysicsBody physics_body;
-    GLuint texture_id; // maybe the scene struct should have this field?
+    GLuint texture_id;
     GLuint display_list;
 } Object;
 
 /**
- * Scene containing a fallback material, light sources and objects.
+ * Place the rooms in world-space.
+ */
+typedef struct RoomPlacement {
+    int idx;
+    bool placed;
+    int gx;
+    int gy;
+} RoomPlacement;
+
+/**
+ * A room of the scene.
+ */
+typedef struct Room {
+    int id;
+    char name[64];
+    Vec3 dimension;
+    Vec3 position;
+    GLuint floor_tex;
+    GLuint ceiling_tex;
+    GLuint wall_tex;
+    bool opening[DIR_COUNT];
+    float wall_thickness;
+    float door_width;
+    float door_height;
+    GLuint display_list;
+} Room;
+
+/**
+ * Scene containing light sources, rooms and objects.
  */
 typedef struct Scene {
     Material material;
     Lighting* lights;
     int light_count;
+    Room* rooms;
+    int room_count;
     Object* objects;
     int object_count;
     int selected_object_id;
@@ -38,7 +71,7 @@ typedef struct Scene {
 } Scene;
 
 /**
- * Initialize the scene by setting material, lights, objects.
+ * Initialize the scene by setting material, lights, rooms and objects.
  */
 void init_scene(Scene* scene);
 
@@ -48,19 +81,42 @@ void init_scene(Scene* scene);
 void add_light(Scene* scene, Lighting* config);
 
 /**
- * Add a new object to the scene
+ * Add a new room to the scene.
+ */
+void add_room(Scene* scene, RoomConfig* config);
+
+/**
+ * Add a new object to the scene.
  */
 void add_object(Scene* scene, ObjectConfig* config);
 
 /**
- * Find object by name
- * Returns NULL if not found
+ * Use BFS to place the rooms in world-space by connection.
+ */
+void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_count);
+
+/**
+ * Initialize the object
+ */
+void place_objects_on_ground(Scene* scene);
+
+/**
+ * Sync the physics transformations for rendering.
+ */
+void sync_physics_transforms(Scene* scene);
+
+/**
+ * Find a room by name.
+ */
+Room* find_room_by_name(Scene* scene, const char* name);
+
+/**
+ * Find an object by name.
  */
 Object* find_object_by_name(Scene* scene, const char* name);
 
 /**
- * Find object by ID
- * Returns NULL if not found
+ * Find object by ID.
  */
 Object* find_object_by_id(Scene* scene, int id);
 
@@ -96,24 +152,14 @@ void place_objects_on_ground(Scene* scene);
 int select_object_at(Scene* scene, Camera* camera, int mouse_x, int mouse_y);
 
 /**
- * Move the currently selected object
+ * Move the currently selected object.
  */
 void move_selected_object(Scene* scene, Vec3 delta);
 
 /**
- * Rotate the currently selected object
+ * Rotate the currently selected object.
  */
 void rotate_selected_object(Scene* scene, float rx, float ry);
-
-/**
- * Reset rotation of selected object
- */
-void reset_selected_object_rotation(Scene* scene);
-
-/**
- * Apply physics forces to objects
- */
-void apply_physics_forces(Scene* scene, float elapsed_time);
 
 /**
  * Free all resources used by the scene

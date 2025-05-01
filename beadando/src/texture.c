@@ -1,13 +1,18 @@
 #include "texture.h"
+#include <stdio.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
 GLuint load_texture(char* filename) {
-    SDL_Surface* surface;
-    GLuint texture_name;
+    SDL_Surface* surface = IMG_Load(filename);
+    if (!surface) {
+        printf("[ERROR] IMG_Load(\"%s\"): %s\n",
+                filename, IMG_GetError());
+        return 0;
+    }
 
-    surface = IMG_Load(filename);
+    GLuint texture_name;
 
     glGenTextures(1, &texture_name);
 
@@ -19,6 +24,8 @@ GLuint load_texture(char* filename) {
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    SDL_FreeSurface(surface);
 
     return texture_name;
 }
