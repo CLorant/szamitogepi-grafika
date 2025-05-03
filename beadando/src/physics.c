@@ -169,6 +169,10 @@ void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direct
     float jamb_l = (dim.y - door_width) * 0.5f;
     float t2 = wall_thickness * 0.5f;
 
+    door_width = fmaxf(door_width, 0.01f);
+    wall_thickness = fmaxf(wall_thickness, 0.01f);
+    door_height = fmaxf(door_height, 0.01f);
+
     if (dir == DIR_NORTH) {
         wall_y = center.y + l + t2;
 
@@ -379,6 +383,12 @@ void physics_get_rotation(PhysicsBody* pb, Vec3* rotation) {
     rotation->z = atan2(siny_cosp, cosy_cosp) * (180.0 / M_PI);
 }
 
+void physics_get_linear_velocity(PhysicsBody* pb, Vec3* velocity) {
+    if (!pb || !pb->body) return;
+    const dReal* vel = dBodyGetLinearVel(pb->body);
+    *velocity = (Vec3){ vel[0], vel[1], vel[2] };
+}
+
 void physics_set_position(PhysicsBody* pb, Vec3 position) {
     if (!pb || !pb->body) return;
 
@@ -401,18 +411,6 @@ void physics_set_rotation(PhysicsBody* pb, Vec3 rotation) {
     physics_wake_up(pb);
 }
 
-void physics_apply_force(PhysicsBody* pb, Vec3 force) {
-    if (!pb || !pb->body) return;
-    dBodyAddForce(pb->body, force.x, force.y, force.z);
-    physics_wake_up(pb);
-}
-
-void physics_apply_torque(PhysicsBody* pb, Vec3 torque) {
-    if (!pb || !pb->body) return;
-    dBodyAddTorque(pb->body, torque.x, torque.y, torque.z);
-    physics_wake_up(pb);
-}
-
 void physics_set_linear_velocity(PhysicsBody* pb, Vec3 velocity) {
     if (!pb || !pb->body) return;
     dBodySetLinearVel(pb->body, velocity.x, velocity.y, velocity.z);
@@ -422,6 +420,18 @@ void physics_set_linear_velocity(PhysicsBody* pb, Vec3 velocity) {
 void physics_set_angular_velocity(PhysicsBody* pb, Vec3 velocity) {
     if (!pb || !pb->body) return;
     dBodySetAngularVel(pb->body, velocity.x, velocity.y, velocity.z);
+    physics_wake_up(pb);
+}
+
+void physics_apply_force(PhysicsBody* pb, Vec3 force) {
+    if (!pb || !pb->body) return;
+    dBodyAddForce(pb->body, force.x, force.y, force.z);
+    physics_wake_up(pb);
+}
+
+void physics_apply_torque(PhysicsBody* pb, Vec3 torque) {
+    if (!pb || !pb->body) return;
+    dBodyAddTorque(pb->body, torque.x, torque.y, torque.z);
     physics_wake_up(pb);
 }
 

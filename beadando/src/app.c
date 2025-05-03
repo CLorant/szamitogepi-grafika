@@ -23,7 +23,7 @@ void init_app(App* app, int width, int height) {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     app->window = SDL_CreateWindow(
-        "Models",
+        "L.O.P.A.S.",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         width, height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
@@ -33,6 +33,8 @@ void init_app(App* app, int width, int height) {
         printf("[ERROR] Unable to create the application window!\n");
         return;
     }
+
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     inited_loaders = IMG_Init(IMG_INIT_PNG);
     if (inited_loaders == 0) {
@@ -45,20 +47,30 @@ void init_app(App* app, int width, int height) {
         printf("[ERROR] Unable to create the OpenGL context!\n");
         return;
     }
-    
+
     init_opengl();
     printf("[INFO] OpenGL version: %s\n", glGetString(GL_VERSION));
 
     if (SDL_GL_SetSwapInterval(1) != 0) {
-        fprintf(stderr, "[WARNING] Could not enable VSync: %s\n", SDL_GetError());
+        printf("[WARNING] Could not enable VSync: %s\n", SDL_GetError());
     }
-    
+
+    app->manual.enabled = false;
+    app->manual.charmap_id = load_texture("assets/textures/charmap.png");
+    app->manual.text = read_manual("assets/manual.txt");
+    app->manual.scroll = 0.0f;
+    app->manual.line_height = 1.0f;
+    update_manual_display_params(app);
+
     init_camera(&(app->camera));
     reshape(app, width, height);
     init_scene(&(app->scene));
 
+    app->is_dragging = false;
+    app->is_fullscreen = true;
     app->is_running = true;
-    app->is_fullscreen = false;
+    
+    SDL_SetWindowFullscreen(app->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
 
 void init_opengl() {
@@ -67,7 +79,7 @@ void init_opengl() {
     glEnable(GL_NORMALIZE);
     glEnable(GL_AUTO_NORMAL);
 
-    glClearColor(0.1, 0.1, 0.1, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -89,6 +101,8 @@ void reshape(App* app, GLsizei width, GLsizei height) {
     app->camera.viewport.height = height;
     app->camera.aspect_ratio = (float)width / height;
 
+    update_manual_display_params(app);
+
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -98,10 +112,7 @@ void reshape(App* app, GLsizei width, GLsizei height) {
 
 void handle_app_events(App* app) {
     SDL_Event event;
-    static bool is_mouse_down = false;
-    static int mouse_x = 0;
-    static int mouse_y = 0;
-    int x, y;
+
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_WINDOWEVENT:
@@ -130,13 +141,14 @@ void handle_app_events(App* app) {
             case SDL_SCANCODE_D:
                 set_camera_side_speed(&(app->camera), -1);
                 break;
-            /// TODO: Decide to keep or not
             case SDL_SCANCODE_Q:
                 set_camera_vertical_speed(&(app->camera), 1);
                 break;
-            /// TODO: Decide to keep or not
             case SDL_SCANCODE_E:
                 set_camera_vertical_speed(&(app->camera), -1);
+                break;
+            case SDL_SCANCODE_F1:
+                handle_manual(app);
                 break;
             case SDL_SCANCODE_F2:
                 adjust_fov(&app->camera, -5.0f);
@@ -187,32 +199,57 @@ void handle_app_events(App* app) {
                 break;
             }
             break;
-        case SDL_MOUSEBUTTONDOWN:
-            is_mouse_down = true;
-            SDL_GetMouseState(&mouse_x, &mouse_y);
-            app->scene.selected_object_id = select_object_at(&(app->scene), &(app->camera), mouse_x, mouse_y);
+        case SDL_MOUSEBUTTONDOWN: {
+            if (app->manual.enabled) continue;
+
+            float hit_dist = 0.0f;
+            int cx = app->window_width / 2;
+            int cy = app->window_height / 2;
+            int hit_id = select_object_at(
+                &app->scene,
+                &app->camera,
+                cx, cy,
+                &hit_dist
+            );
+
+            app->scene.selected_object_id = hit_id;
+            if (hit_id >= 0) {
+                app->drag_distance = hit_dist;
+                app->drag_offset_x = app->drag_offset_y = 0.0f;
+                app->is_dragging = true;
+            }
             break;
+        }
         case SDL_MOUSEMOTION: {
-            SDL_GetMouseState(&x, &y);
-            int dx = mouse_x - x;
-            int dy = mouse_y - y;
-        
-            if (is_mouse_down) {
-                handle_drag_motion(app, dx, dy);
+            if (app->manual.enabled) continue;
+
+            int dx = -event.motion.xrel;
+            int dy = -event.motion.yrel;
+
+            Uint32 buttons = SDL_GetMouseState(NULL, NULL);
+            if (buttons & SDL_BUTTON_LMASK) {
+                rotate_camera(&app->camera, dx, dy);
+                handle_move_selected_object(app, dx, dy);
+            }
+            else if (buttons & SDL_BUTTON_RMASK) {
+                rotate_selected_object(&app->scene,
+                    dy * 0.5f,
+                    dx * 0.5f);
             }
             else {
                 rotate_camera(&app->camera, dx, dy);
             }
-        
-            mouse_x = x;
-            mouse_y = y;
+
         } break;
         case SDL_MOUSEBUTTONUP:
-            is_mouse_down = false;
+            app->is_dragging = false;
             app->scene.selected_object_id = -1;
             break;
         case SDL_MOUSEWHEEL: {
-            if (app->camera.is_orbital) {
+            if (app->manual.enabled) {
+                app->manual.scroll += event.wheel.y * app->manual.line_height;
+            }
+            else if (app->camera.is_orbital) {
                 app->camera.orbital_radius += event.wheel.y;
 
                 if (app->camera.orbital_radius < 1.0) {
@@ -225,7 +262,7 @@ void handle_app_events(App* app) {
             else {
                 handle_mouse_wheel(app, event.wheel.y);
             }
-            
+
         } break;
         case SDL_QUIT:
             app->is_running = false;
@@ -234,38 +271,6 @@ void handle_app_events(App* app) {
             break;
         }
     }
-}
-
-/// TODO: The user should be able to rotate the camera while moving with the object.
-void handle_drag_motion(App* app, int dx, int dy) {
-    const float DRAG_SPEED = 0.005f;
-    
-    if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
-        update_camera_basis(&app->camera);
-            
-        Vec3 delta = {
-            .x = app->camera.basis.right.x * dx * DRAG_SPEED + app->camera.basis.up.x * dy * DRAG_SPEED,
-            .y = app->camera.basis.right.y * dx * DRAG_SPEED + app->camera.basis.up.y * dy * DRAG_SPEED,
-            .z = app->camera.basis.right.z * dx * DRAG_SPEED + app->camera.basis.up.z * dy * DRAG_SPEED,
-        };
-        move_selected_object(&app->scene, delta);
-    }
-    else if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_RMASK) {
-        rotate_selected_object(&app->scene, dy * 0.5f, dx * 0.5f);
-    }
-}
-
-void handle_mouse_wheel(App* app, int y_wheel) {
-    const float SCROLL_SPEED = 0.1f;
-
-    update_camera_basis(&app->camera);
-    
-    Vec3 delta = {
-        .x = app->camera.basis.forward.x * y_wheel * SCROLL_SPEED,
-        .y = app->camera.basis.forward.y * y_wheel * SCROLL_SPEED,
-        .z = app->camera.basis.forward.z * y_wheel * SCROLL_SPEED,
-    };
-    move_selected_object(&app->scene, delta);
 }
 
 void update_app(App* app) {
@@ -278,6 +283,10 @@ void update_app(App* app) {
 
     update_camera(&(app->camera), elapsed_time);
     update_scene(&(app->scene), elapsed_time);
+
+    if (app->is_dragging) {
+        handle_move_selected_object(app, 0, 0);
+    }
 }
 
 void render_app(App* app) {
@@ -285,10 +294,18 @@ void render_app(App* app) {
     glMatrixMode(GL_MODELVIEW);
 
     glPushMatrix();
-    set_view(&(app->camera));
-    render_scene(&(app->scene));
-    glPopMatrix();
 
+    set_view(&(app->camera));
+    if (!app->manual.enabled) {
+        render_scene(&(app->scene));
+        draw_crosshair(app);
+    }
+    else {
+       draw_manual(app);
+    }
+
+    glPopMatrix();
+    
     SDL_GL_SwapWindow(app->window);
 }
 
@@ -302,4 +319,130 @@ void destroy_app(App* app) {
     }
 
     SDL_Quit();
+}
+
+void update_manual_display_params(App* app) {
+    float aspect_ratio = app->camera.aspect_ratio;
+    float base_aspect = 16.0f / 9.0f;
+    float aspect_scale = aspect_ratio / base_aspect;
+    float height_scale = (float)app->window_height / 1080.0f;
+    float narrow_screen_factor = powf(base_aspect / fmaxf(aspect_ratio, 0.5f), 0.95f);
+    
+    app->manual.distance = 20.0f * height_scale * narrow_screen_factor;
+    app->manual.start_x = -17.0f * aspect_scale * narrow_screen_factor;
+    app->manual.start_y = 20.0f * height_scale;
+}
+
+void handle_manual(App* app) {
+    if (!app->manual.enabled) {
+        app->manual.prev_cam_position = app->camera.position;
+        app->manual.prev_cam_rotation = app->camera.rotation;
+        app->manual.prev_cam_orbital = app->camera.is_orbital;
+
+        app->camera.is_orbital = false;
+        app->camera.rotation = (Vec3){ 0, 0, 0 };
+        set_camera_speed(&app->camera, 0);
+        set_camera_side_speed(&app->camera, 0);
+        set_camera_vertical_speed(&app->camera, 0);
+        update_camera_basis(&app->camera);
+    }
+    else {
+        app->camera.position = app->manual.prev_cam_position;
+        app->camera.rotation = app->manual.prev_cam_rotation;
+        app->camera.is_orbital = app->manual.prev_cam_orbital;
+        update_camera_basis(&app->camera);
+    }
+
+    app->manual.enabled = !app->manual.enabled;
+}
+
+void handle_move_selected_object(App* app, int dx, int dy) {
+    const float DRAG_SPEED = 0.005f;
+
+    if (!app->is_dragging || app->scene.selected_object_id < 0) 
+        return;
+
+    app->drag_offset_x += dx * DRAG_SPEED;
+    app->drag_offset_y += dy * DRAG_SPEED;
+
+    update_camera_basis(&app->camera);
+    
+    Vec3 base = vec3_add(
+        app->camera.position,
+        vec3_scale(app->camera.basis.forward, app->drag_distance)
+    );
+
+    Vec3 lateral = vec3_add(
+        vec3_scale(app->camera.basis.right, app->drag_offset_x),
+        vec3_scale(app->camera.basis.up,    app->drag_offset_y)
+    );
+
+    Vec3 target = vec3_add(base, lateral);
+
+    move_selected_object(&app->scene, target);
+}
+
+void handle_mouse_wheel(App* app, int y_wheel) {
+    const float SCROLL_SPEED = 0.5f;
+
+    app->drag_distance += y_wheel * SCROLL_SPEED;
+    app->drag_distance = fminf(fmaxf(app->drag_distance, 0.5f), 3.0f);
+
+    if (app->is_dragging) {
+        handle_move_selected_object(app, 0, 0);
+    }
+}
+
+void draw_crosshair(const App* app) {
+    float aspect_ratio = app->camera.aspect_ratio;
+    float size = 0.02f;
+    
+    glDisable(GL_DEPTH_TEST);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glColor3f(0.5f, 0.5f, 0.5f);
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+
+    glVertex2f(-size / aspect_ratio, 0.0f);
+    glVertex2f(size / aspect_ratio, 0.0f);
+    
+    glVertex2f(0.0f, -size);
+    glVertex2f(0.0f, size);
+    
+    glEnd();
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void draw_manual(const App* app) {
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(0.0f, 0.0f, -app->manual.distance);
+    glTranslatef(0.0f, -app->manual.scroll, 0.0f);
+    glRotatef(180.0f, 1.0f, 0.0f, 0.0f);
+    draw_string(
+        app->manual.charmap_id,
+        app->manual.text,
+        app->manual.start_x,
+        app->manual.start_y,
+        app->manual.line_height
+    );
+    glPopMatrix();
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
 }

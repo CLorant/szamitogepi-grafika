@@ -9,7 +9,7 @@
 static json_object* parse_json_file(const char* filename) {
     FILE* fp = fopen(filename, "r");
     if (!fp) {
-        fprintf(stderr, "Cannot open %s\n", filename);
+        printf("[ERROR] Cannot open %s\n", filename);
         return NULL;
     }
 
@@ -193,6 +193,71 @@ void read_light_config(const char* filename, Lighting* light_configs, int* light
     }
 
     json_object_put(root);
+}
+
+char* read_manual(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        printf("[ERROR] Cannot open manual file\n");
+        return NULL;
+    }
+    
+    char** lines = NULL;
+    int line_count = 0;
+    int max_line_length = 0;
+    
+    char line_buffer[1024];
+    while (fgets(line_buffer, sizeof(line_buffer), file)) {
+        size_t len = strlen(line_buffer);
+        
+        if (len > 0 && line_buffer[len - 1] == '\n') {
+            line_buffer[len - 1] = '\0';
+            len--;
+        }
+        
+        if (len > max_line_length) {
+            max_line_length = len;
+        }
+        
+        lines = realloc(lines, (line_count + 1) * sizeof(char*));
+        lines[line_count] = strdup(line_buffer);
+        line_count++;
+    }
+    
+    size_t total_size = (max_line_length + 1) * line_count + 1;
+    
+    char* result = malloc(total_size);
+    if (!result) {
+        for (int i = 0; i < line_count; i++) {
+            free(lines[i]);
+        }
+        free(lines);
+        fclose(file);
+        return NULL;
+    }
+    
+    char* current = result;
+    
+    for (int i = line_count - 1; i >= 0; i--) {
+        int line_len = strlen(lines[i]);
+        
+        strcpy(current, lines[i]);
+        current += line_len;
+        
+        for (int j = line_len; j < max_line_length; j++) {
+            *current++ = ' ';
+        }
+        
+        *current++ = '\n';
+        
+        free(lines[i]);
+    }
+    
+    *current = '\0';
+    
+    free(lines);
+    fclose(file);
+    return result;
 }
 
 void print_room_configs(RoomConfig* room_config, int room_count) {

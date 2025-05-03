@@ -3,6 +3,7 @@
 
 #include <obj/model.h>
 #include <stdbool.h>
+#include <GL/gl.h>
 
 #define EPSILON 1e-6f
 #define MAX_LIGHTS 8
@@ -132,6 +133,11 @@ void set_material(const Material* material);
  * Draw a room of the scene.
  */
 void draw_room(Room* room);
+
+/**
+ * Draw a line of text.
+ */
+void draw_string(GLuint charmap_id, const char* s, float start_x, float start_y, float line_height);
 
 /**
  * Draw the origin of the world coordinate system.

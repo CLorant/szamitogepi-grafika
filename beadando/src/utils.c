@@ -23,7 +23,7 @@ void rotate_model(Model* model, Vec3 rotation) {
     for (int i = 1; i <= model->n_vertices; ++i) {
         Vertex* v = &model->vertices[i];
         double x = v->x, y = v->y, z = v->z;
-    
+
         double y_rotx = y * cx - z * sx;
         double z_rotx = y * sx + z * cx;
         y = y_rotx;
@@ -47,7 +47,7 @@ void rotate_model(Model* model, Vec3 rotation) {
 
 void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max) {
     if (!model || model->n_vertices == 0) {
-        *out_min = *out_max = (Vec3){0, 0, 0};
+        *out_min = *out_max = (Vec3){ 0, 0, 0 };
         return;
     }
 
@@ -85,11 +85,11 @@ bool slab_hit(float origin, float dir, float min_box, float max_box, float* tmin
 
 void get_delta(int dir, int* dx, int* dy) {
     switch (dir) {
-      case DIR_NORTH: *dx =  0; *dy =  1; break;
-      case DIR_EAST:  *dx =  1; *dy =  0; break;
-      case DIR_SOUTH: *dx =  0; *dy = -1; break;
-      case DIR_WEST:  *dx = -1; *dy =  0; break;
-      default:        *dx =  0; *dy =  0; break;
+    case DIR_NORTH: *dx = 0; *dy = 1; break;
+    case DIR_EAST:  *dx = 1; *dy = 0; break;
+    case DIR_SOUTH: *dx = 0; *dy = -1; break;
+    case DIR_WEST:  *dx = -1; *dy = 0; break;
+    default:        *dx = 0; *dy = 0; break;
     }
 }
 
@@ -329,6 +329,47 @@ void draw_room(Room* room) {
     }
 }
 
+void draw_string(GLuint tex, const char* s, float start_x, float start_y, float line_height) {
+    const float FONT_WIDTH = 1.0f / 16.0f;
+    const float FONT_HEIGHT = 1.0f / 8.0f;
+    const float CHAR_WIDTH = 0.5f;
+    const float CHAR_HEIGHT = 1.0f;
+
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glBegin(GL_QUADS);
+    float x = start_x, y = start_y;
+    for (int i = 0; s[i]; ++i) {
+        char c = s[i];
+        if (c == '\n') {
+            x = start_x;
+            y -= line_height;
+            continue;
+        }
+
+        if (c >= 32 && c < 127) {
+            int row = c / 16 + 1;
+            int column = c % 16;
+            float u = FONT_WIDTH * column;
+            float v = FONT_HEIGHT * row;
+
+            glTexCoord2f(u, v);
+            glVertex3f(x, y, 0);
+
+            glTexCoord2f(u + FONT_WIDTH, v);
+            glVertex3f(x + CHAR_WIDTH, y, 0);
+
+            glTexCoord2f(u + FONT_WIDTH, v - FONT_HEIGHT);
+            glVertex3f(x + CHAR_WIDTH, y - CHAR_HEIGHT, 0);
+
+            glTexCoord2f(u, v - FONT_HEIGHT);
+            glVertex3f(x, y - CHAR_HEIGHT, 0);
+
+            x += CHAR_WIDTH;
+        }
+    }
+    glEnd();
+}
+
 void draw_origin(float size) {
     glBegin(GL_LINES);
 
@@ -395,7 +436,7 @@ Vec3 vec3_max(Vec3 a, Vec3 b) {
 }
 
 Vec3 vec3_multiply(Vec3 a, Vec3 b) {
-    return (Vec3) { a.x * b.x, a.y * b.y, a.z * b.z };
+    return (Vec3) { a.x* b.x, a.y* b.y, a.z* b.z };
 }
 
 Vec3 vec3_add(Vec3 a, Vec3 b) {
@@ -407,7 +448,7 @@ Vec3 vec3_substract(Vec3 a, Vec3 b) {
 }
 
 Vec3 vec3_scale(Vec3 v, float scale) {
-    return (Vec3) { v.x * scale, v.y * scale, v.z * scale };
+    return (Vec3) { v.x* scale, v.y* scale, v.z* scale };
 }
 
 float vec3_dot(Vec3 a, Vec3 b) {

@@ -146,28 +146,27 @@ void add_object(Scene* scene, ObjectConfig* config) {
 
     calculate_mesh_aabb(&obj->model, &mesh_min, &mesh_max);
     Vec3 mesh_half_ext = {
-        (mesh_max.x - mesh_min.x) * 0.5f,
-        (mesh_max.y - mesh_min.y) * 0.5f,
-        (mesh_max.z - mesh_min.z) * 0.5f
+        fmaxf((mesh_max.x - mesh_min.x) * 0.5f, 0.01f),
+        fmaxf((mesh_max.y - mesh_min.y) * 0.5f, 0.01f),
+        fmaxf((mesh_max.z - mesh_min.z) * 0.5f, 0.01f)
     };
 
     Room* room = find_room_by_name(scene, config->room_name);
     float half_width = room->dimension.x * 0.5f;
     float half_length = room->dimension.y * 0.5f;
 
-
     Vec3 world = {
         room->position.x + config->offset.x * half_width,
         room->position.y + config->offset.y * half_length,
         room->position.z + config->offset.z
     };
+
     obj->position = world;
 
-    float margin = 0.05f;
-    float min_x = room->position.x - half_width + margin + mesh_half_ext.x;
-    float max_x = room->position.x + half_width - margin - mesh_half_ext.x;
-    float min_y = room->position.y - half_length + margin + mesh_half_ext.y;
-    float max_y = room->position.y + half_length - margin - mesh_half_ext.y;
+    float min_x = room->position.x - half_width + 0.05f + mesh_half_ext.x;
+    float max_x = room->position.x + half_width - 0.05f - mesh_half_ext.x;
+    float min_y = room->position.y - half_length + 0.05f + mesh_half_ext.y;
+    float max_y = room->position.y + half_length - 0.05f - mesh_half_ext.y;
 
     obj->position.x = fminf(fmaxf(obj->position.x, min_x), max_x);
     obj->position.y = fminf(fmaxf(obj->position.y, min_y), max_y);
@@ -474,14 +473,14 @@ void render_scene(const Scene* scene) {
             glCallList(obj->display_list);
             glPopMatrix();
         }
-
+        
         if (scene->selected_object_id == obj->id) {
             physics_draw_obb(&obj->physics_body);
         }
     }
 }
 
-int select_object_at(Scene* scene, Camera* cam, int mx, int my) {
+int select_object_at(Scene* scene, Camera* cam, int mx, int my, float* out_distance) {
     float nx = (2.0f * mx) / cam->viewport.width - 1.0f;
     float ny = 1.0f - (2.0f * my) / cam->viewport.height;
 
@@ -506,6 +505,9 @@ int select_object_at(Scene* scene, Camera* cam, int mx, int my) {
         if (ray_intersect_obb(cam->position, dir, &obj->physics_body, &t) && t < best) {
             best = t;
             hit = obj->id;
+            if (out_distance) {
+                *out_distance = best;
+            }
         }
     }
 
@@ -520,15 +522,24 @@ int select_object_at(Scene* scene, Camera* cam, int mx, int my) {
     return hit;
 }
 
-void move_selected_object(Scene* scene, Vec3 delta) {
+void move_selected_object(Scene* scene, Vec3 target_position) {
     Object* obj = find_object_by_id(scene, scene->selected_object_id);
     if (!obj || obj->is_static) return;
 
-    Vec3 pos;
-    physics_get_position(&obj->physics_body, &pos);
-    Vec3 target = vec3_add(pos, vec3_scale(delta, 5.0f));
-    Vec3 vel = vec3_substract(target, pos);
-    vel = vec3_scale(vel, 5.0f);
+    Vec3 current;
+    physics_get_position(&obj->physics_body, &current);
+
+    Vec3 velocity;
+    physics_get_linear_velocity(&obj->physics_body, &velocity);
+    
+    Vec3 delta = vec3_substract(target_position, current);
+
+    dMass mInfo;
+    dBodyGetMass(obj->physics_body.body, &mInfo);
+    float mass = (float)mInfo.mass;
+    float invMass = (mass > 0.0001f ? 1.0f/mass : 1.0f);
+    Vec3 vel = vec3_scale(delta, 5.0f * invMass);
+
     physics_set_linear_velocity(&obj->physics_body, vel);
 }
 

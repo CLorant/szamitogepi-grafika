@@ -18,7 +18,7 @@
       "offset": [0.5, 0.5, 0.5],
       "rotation": [0, 0, 0],
       "scale": [0.5, 0.5, 0.5],
-      "mass": 10,
+      "mass": 1.5,
       "value": 1000,
       "room_name": "start_room",
       "is_static": false
@@ -54,9 +54,9 @@
         "offset": [-0.4, -0.4, 0.5],
         "rotation": [90, 0, 0],
         "scale": [0.25, 0.25, 0.25],
-        "mass": 10,
+        "mass": 2,
         "value": 1000,
-        "room_name": "ns_corridor",
+        "room_name": "disco_room",
         "is_static": false
     },
     {
@@ -65,10 +65,10 @@
         "texture_path": "assets/textures/raptor.png",
         "offset": [-0.2, 0.0, 0.5],
         "rotation": [0, 0, 0],
-        "scale": [1.5, 1.5, 1.5],
+        "scale": [0.5, 0.5, 0.5],
         "mass": 10,
         "value": 1000,
-        "room_name": "ns_corridor",
+        "room_name": "disco_room",
         "is_static": false
     }
 ]

@@ -1,5 +1,47 @@
-all:
-	gcc -Iinclude/ src/app.c src/camera.c src/main.c src/physics.c src/scene.c src/texture.c src/utils.c src/config.c -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lobj -lopengl32 -lglu32 -lode-single -ljson-c -lm -o models.exe -Wall -Wextra -Wpedantic -g
+CC = gcc
+CFLAGS = -Iinclude -Wall -Wextra -Wpedantic -std=c11 -g
+LDFLAGS =
+SRC = src
+BUILD = build
 
-linux:
-	gcc -Iinclude/ src/app.c src/camera.c src/main.c src/physics.c src/scene.c src/texture.c src/utils.c src/config.c -lobj -lSDL2 -lglu32 -lSDL2_image -lGL -lode-single -ljson-c -lm -o models -Wall -Wextra -Wpedantic
+SRC_FILES := $(wildcard $(SRC)/*.c)
+OBJ_FILES := $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(SRC_FILES))
+
+TARGET_WINDOWS = lopas.exe
+TARGET_LINUX = lopas
+
+ifeq ($(OS), Windows_NT)
+    TARGET = $(TARGET_WINDOWS)
+    LIBS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lobj -lopengl32 -lglu32 -lode-single -ljson-c -lm
+    MKDIR = if not exist $(BUILD) mkdir $(BUILD)
+    RM = del /f /q
+    RMDIR = rmdir /s /q
+else
+    TARGET = $(TARGET_LINUX)
+    LIBS = -lobj -lSDL2 -lSDL2_image -lGL -lGLU -lode-single -ljson-c -lm
+    MKDIR = mkdir -p $(BUILD)
+    RM = rm -f
+    RMDIR = rm -rf
+endif
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ_FILES)
+	$(CC) $(OBJ_FILES) -o $@ $(LDFLAGS) $(LIBS)
+
+$(BUILD)/%.o: $(SRC)/%.c
+	@$(MKDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+ifeq ($(OS), Windows_NT)
+	-$(RM) $(BUILD)\*.o
+	-$(RM) $(TARGET_WINDOWS)
+	-$(RMDIR) $(BUILD)
+else
+	$(RM) $(BUILD)/*.o
+	$(RM) $(TARGET_LINUX)
+	$(RMDIR) $(BUILD)
+endif
+
+.PHONY: all clean

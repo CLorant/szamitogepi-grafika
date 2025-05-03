@@ -111,13 +111,15 @@ void physics_draw_obb(PhysicsBody* pb);
  */
 void physics_get_position(PhysicsBody* pb, Vec3* position);
 void physics_get_rotation(PhysicsBody* pb, Vec3* rotation);
+void physics_get_linear_velocity(PhysicsBody* pb, Vec3* velocity);
+
 void physics_set_position(PhysicsBody* pb, Vec3 position);
 void physics_set_rotation(PhysicsBody* pb, Vec3 rotation);
+void physics_set_linear_velocity(PhysicsBody* pb, Vec3 velocity);
+void physics_set_angular_velocity(PhysicsBody* pb, Vec3 velocity);
 
 void physics_apply_force(PhysicsBody* pb, Vec3 force);
 void physics_apply_torque(PhysicsBody* pb, Vec3 torque);
-void physics_set_linear_velocity(PhysicsBody* pb, Vec3 velocity);
-void physics_set_angular_velocity(PhysicsBody* pb, Vec3 velocity);
 
 void physics_wake_up(PhysicsBody* pb);
 void physics_disable_rotation(PhysicsBody* pb);

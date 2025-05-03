@@ -149,7 +149,7 @@ void place_objects_on_ground(Scene* scene);
  * Check if mouse coordinates intersect with an object
  * Returns object ID or -1 if no object was hit
  */
-int select_object_at(Scene* scene, Camera* camera, int mouse_x, int mouse_y);
+int select_object_at(Scene* scene, Camera* camera, int mx, int my, float* out_distance);
 
 /**
  * Move the currently selected object.
