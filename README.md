@@ -35,7 +35,7 @@ A program célja, hogy a felhasználó tetszőleges mennyiségű tárgyat gyűjt
 - Fényerő szabályozása: F5 (csökkentés) és F6 (növelés) billentyűkkel
 
 **Használati útmutató:**
-- Elérhető a Manual/Instructions menüpont alatt
+- F1 billenytűvel megtekinthető
 
 ### Többlet funkciók
 
@@ -46,26 +46,6 @@ A program célja, hogy a felhasználó tetszőleges mennyiségű tárgyat gyűjt
 **Objektumkijelölés:**
 - Egérrel történő kijelölés Ray-OBB vizsgálattal
 - Kijelölt objektum OBB keretének megjelenítése
-
-**Felhasználói felület (SDL2 alapú):**
-
-**Főmenü:**
-- Start
-- Settings
-    - Fullscreen
-    - FOV
-    - Brightness
-- Manual
-    - About
-    - Controls
-    - Instructions
-- Exit
-
-**Játékmenü:**
-- Resume
-- Settings
-- Manual
-- Exit
 
 > **Megjegyzés**
 >
