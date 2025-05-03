@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Iinclude -Wall -Wextra -Wpedantic -std=c11 -g
+CFLAGS = -Iinclude -Wall -Wextra -Wpedantic -g -O3
 LDFLAGS =
 SRC = src
 BUILD = build
@@ -12,13 +12,13 @@ TARGET_LINUX = lopas
 
 ifeq ($(OS), Windows_NT)
     TARGET = $(TARGET_WINDOWS)
-    LIBS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lobj -lopengl32 -lglu32 -lode-single -ljson-c -lm
+    LIBS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lobj -lopengl32 -lglu32 -lode_single -ljson-c -lm
     MKDIR = if not exist $(BUILD) mkdir $(BUILD)
     RM = del /f /q
     RMDIR = rmdir /s /q
 else
     TARGET = $(TARGET_LINUX)
-    LIBS = -lobj -lSDL2 -lSDL2_image -lGL -lGLU -lode-single -ljson-c -lm
+    LIBS = -lobj -lSDL2 -lSDL2_image -lGL -lGLU -lode_single -ljson-c -lm
     MKDIR = mkdir -p $(BUILD)
     RM = rm -f
     RMDIR = rm -rf

@@ -53,7 +53,7 @@ typedef struct PhysicsConfig {
 /**
  * Initialize global physics.
  */
-PhysicsWorld* init_physics(const dReal gravity[3]);
+void init_physics(PhysicsWorld* pw, const dReal gravity[3]);
 
 /**
  * Clean up physics.
@@ -74,12 +74,12 @@ void physics_create_box(PhysicsWorld* pw, PhysicsBody* pb, double mass, Vec3 pos
 /**
  * Create a flat bounding wall.
  */
-void physics_create_wall_filled(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float thickness);
+void physics_create_wall_filled(PhysicsWorld* pw, Vec3 center, Vec3 dim, Direction dir, float thickness);
 
 /**
  * Create three separate bounding walls: left, top, right, leaving a door sized hole.
  */
-void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float wall_thickness, float door_width, float door_height);
+void physics_create_wall_connector(PhysicsWorld* pw, Vec3 center, Vec3 dim, Direction dir, float wall_thickness, float door_width, float door_height);
 
 /**
  * Add an infinite static ground plane.
@@ -102,11 +102,6 @@ bool physics_get_obb_corners(PhysicsBody* pb, Vec3 out_corners[8]);
 bool ray_intersect_obb(Vec3 ray_o, Vec3 ray_d, PhysicsBody* pb, float* tmin_out);
 
 /**
- * Draw a yellow outline around an object's bounding.
- */
-void physics_draw_obb(PhysicsBody* pb);
-
-/**
  * Simplified physics API.
  */
 void physics_get_position(PhysicsBody* pb, Vec3* position);
@@ -123,10 +118,5 @@ void physics_apply_torque(PhysicsBody* pb, Vec3 torque);
 
 void physics_wake_up(PhysicsBody* pb);
 void physics_disable_rotation(PhysicsBody* pb);
-
-/**
- * Print the position and orientation of a body for debugging.
- */
-void physics_log_body_state(PhysicsBody* pb);
 
 #endif /* PHYSICS_H */

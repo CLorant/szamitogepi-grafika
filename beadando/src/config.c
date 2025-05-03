@@ -187,7 +187,37 @@ void read_light_config(const char* filename, Lighting* light_configs, int* light
         json_get_rgba_field(item, "diffuse", &cfg.diffuse);
         json_get_rgba_field(item, "specular", &cfg.specular);
 
-        json_get_vec4_field(item, "position", &cfg.position);
+        // Default values
+        cfg.is_spotlight = false;
+        cfg.cutoff = 180.0f;  // Not a spotlight by default
+        cfg.exponent = 0.0f;
+        cfg.direction = (Vec3){0.0f, -1.0f, 0.0f}; // Default: pointing down
+        cfg.room_name[0] = '\0';
+
+        // Check if this is the global light
+        if (strcmp(cfg.name, "global") == 0) {
+            // Global light - not a spotlight
+            json_get_vec4_field(item, "position", &cfg.position);
+            cfg.is_spotlight = false;
+        } else {
+            // Spotlight
+            cfg.is_spotlight = true;
+            
+            // Get the room this light belongs to
+            json_get_string_field(item, "room", cfg.room_name, sizeof(cfg.room_name));
+            
+            // Get spotlight parameters if specified
+            json_object* direction_obj = json_object_object_get(item, "direction");
+            if (direction_obj && json_object_is_type(direction_obj, json_type_array)) {
+                json_get_vec3_field(item, "direction", &cfg.direction);
+            }
+            
+            cfg.cutoff = json_get_float_field(item, "cutoff", 30.0f);    // Default 30 degrees
+            cfg.exponent = json_get_float_field(item, "exponent", 10.0f); // Default exponent
+            
+            // Position will be set later based on room dimensions
+            cfg.position = (Vec4){0.0f, 0.0f, 0.0f, 1.0f};
+        }
 
         light_configs[(*light_count)++] = cfg;
     }
@@ -204,7 +234,7 @@ char* read_manual(const char* filename) {
     
     char** lines = NULL;
     int line_count = 0;
-    int max_line_length = 0;
+    size_t max_line_length = 0;
     
     char line_buffer[1024];
     while (fgets(line_buffer, sizeof(line_buffer), file)) {
@@ -244,7 +274,7 @@ char* read_manual(const char* filename) {
         strcpy(current, lines[i]);
         current += line_len;
         
-        for (int j = line_len; j < max_line_length; j++) {
+        for (size_t j = line_len; j < max_line_length; j++) {
             *current++ = ' ';
         }
         
@@ -338,6 +368,7 @@ void print_light_configs(Lighting* light_config, int light_config_count) {
         
         printf("Light %d:\n", i + 1);
         printf("  Name: %s\n", config.name);
+        printf("  Type: %s\n", config.is_spotlight ? "Spotlight" : "Global");
         printf("  Ambient: [%.2f, %.2f, %.2f, %.2f]\n", 
                config.ambient.red, config.ambient.green, 
                config.ambient.blue, config.ambient.alpha);
@@ -351,6 +382,15 @@ void print_light_configs(Lighting* light_config, int light_config_count) {
                config.position.x, config.position.y, 
                config.position.z, config.position.w);
         printf("  Brightness: %.2f\n", config.brightness);
+        
+        if (config.is_spotlight) {
+            printf("  Direction: [%.2f, %.2f, %.2f]\n",
+                   config.direction.x, config.direction.y, config.direction.z);
+            printf("  Cutoff: %.2f degrees\n", config.cutoff);
+            printf("  Exponent: %.2f\n", config.exponent);
+            printf("  Room: %s\n", config.room_name);
+        }
+        
         printf("\n");
     }
 }

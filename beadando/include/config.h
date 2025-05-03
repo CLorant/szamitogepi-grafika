@@ -59,4 +59,4 @@ void print_light_configs(Lighting* light_config, int light_config_count);
 void print_room_configs(RoomConfig* room_config, int room_config_count);
 void print_object_configs(ObjectConfig* obj_config, int obj_config_count);
 
-#endif /* CONFIG_H */
+#endif  /* CONFIG_H */

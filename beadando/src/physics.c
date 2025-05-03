@@ -1,4 +1,5 @@
 #include "physics.h"
+#include "scene.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -26,18 +27,40 @@ static void near_callback(void* data, dGeomID o1, dGeomID o2) {
 
     int n = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
     for (int i = 0; i < n; ++i) {
+        if (!isfinite(contact[i].geom.pos[0]) || !isfinite(contact[i].geom.pos[1]) || !isfinite(contact[i].geom.pos[2])) {
+            continue;
+        }
+
         dJointID c = dJointCreateContact(pw->world, pw->contact_group, &contact[i]);
         dJointAttach(c, b1, b2);
+
+        Object* obj1 = b1 ? (Object*)dBodyGetData(b1) : NULL;
+        Object* obj2 = b2 ? (Object*)dBodyGetData(b2) : NULL;
+        if (obj1 && !obj1->is_static && obj1->is_active) {
+            Vec3 v1, v2, dv;
+            physics_get_linear_velocity(&obj1->physics_body, &v1);
+            if (b2) {
+                physics_get_linear_velocity(&obj2->physics_body, &v2);
+            } else {
+                v2 = (Vec3){0,0,0};
+            }
+            dv = vec3_substract(v1, v2);
+            float speed = vec3_length(dv);
+            
+            float damage = speed * 0.1f;  
+            obj1->value -= damage;
+            if (obj1->value <= 0.0f) {
+                obj1->is_active = false;
+                
+                dGeomDestroy(obj1->physics_body.geom);
+                dBodyDestroy(obj1->physics_body.body);
+            }
+        }
     }
 }
 
-PhysicsWorld* init_physics(const dReal gravity[3]) {
+void init_physics(PhysicsWorld* pw, const dReal gravity[3]) {
     dInitODE2(0);
-    PhysicsWorld* pw = (PhysicsWorld*)malloc(sizeof(PhysicsWorld));
-    if (!pw) {
-        printf("[ERROR] Physics initialization failed!\n");
-        return NULL;
-    }
 
     pw->world = dWorldCreate();
     pw->space = dHashSpaceCreate(NULL);
@@ -48,17 +71,6 @@ PhysicsWorld* init_physics(const dReal gravity[3]) {
 
     PhysicsConfig cfg = physics_default_config();
     physics_apply_config(pw, &cfg);
-
-    return pw;
-}
-
-void physics_destroy(PhysicsWorld* pw) {
-    if (!pw) return;
-    dJointGroupDestroy(pw->contact_group);
-    dSpaceDestroy(pw->space);
-    dWorldDestroy(pw->world);
-    free(pw);
-    dCloseODE();
 }
 
 PhysicsConfig physics_default_config() {
@@ -117,12 +129,14 @@ void physics_create_box(PhysicsWorld* pw, PhysicsBody* pb, double mass, Vec3 pos
     pb->is_active = true;
 }
 
-void physics_create_wall_filled(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float thickness) {
+void physics_create_wall_filled(PhysicsWorld* pw, Vec3 center, Vec3 dim, Direction dir, float thickness) {
     float w = dim.x * 0.5f;
     float l = dim.y * 0.5f;
     float h = dim.z;
 
-    float dx, dy, dz;
+    float dx = 0.1f;
+    float dy = 0.1f;
+    float dz = 0.1f;;
     Vec3 pos = center;
 
     if (dir == DIR_NORTH) {
@@ -154,11 +168,11 @@ void physics_create_wall_filled(dSpaceID space, Vec3 center, Vec3 dim, Direction
         pos.z += h * 0.5f;
     }
 
-    dGeomID box = dCreateBox(space, dx, dy, dz);
+    dGeomID box = dCreateBox(pw->space, dx, dy, dz);
     dGeomSetPosition(box, pos.x, pos.y, pos.z);
 }
 
-void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direction dir, float wall_thickness, float door_width, float door_height) {
+void physics_create_wall_connector(PhysicsWorld* pw, Vec3 center, Vec3 dim, Direction dir, float wall_thickness, float door_width, float door_height) {
     Vec3 pos;
     dGeomID geom;
     float wall_x, wall_y;
@@ -177,15 +191,15 @@ void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direct
         wall_y = center.y + l + t2;
 
         pos = (Vec3){ center.x, wall_y, center.z + door_height + (h - door_height) * 0.5f };
-        geom = dCreateBox(space, door_width, wall_thickness, (h - door_height));
+        geom = dCreateBox(pw->space, door_width, wall_thickness, (h - door_height));
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
 
         pos = (Vec3){ center.x - (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f };
-        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        geom = dCreateBox(pw->space, jamb_w, wall_thickness, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
 
         pos = (Vec3){ center.x + (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f };
-        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        geom = dCreateBox(pw->space, jamb_w, wall_thickness, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
     }
 
@@ -193,15 +207,15 @@ void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direct
         wall_x = center.x + w + t2;
         
         pos = (Vec3){ wall_x, center.y, center.z + door_height + (h - door_height) * 0.5f };
-        geom = dCreateBox(space, wall_thickness, door_width, (h - door_height));
+        geom = dCreateBox(pw->space, wall_thickness, door_width, (h - door_height));
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
 
         pos = (Vec3){ wall_x, center.y - (l - jamb_l * 0.5f), center.z + door_height * 0.5f };
-        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        geom = dCreateBox(pw->space, wall_thickness, jamb_l, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
 
         pos = (Vec3){ wall_x, center.y + (l - jamb_l * 0.5f), center.z + door_height * 0.5f };
-        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        geom = dCreateBox(pw->space, wall_thickness, jamb_l, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
     }
 
@@ -209,15 +223,15 @@ void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direct
         wall_y = center.y - l - t2;
 
         pos = (Vec3){ center.x, wall_y, center.z + door_height + (h - door_height) * 0.5f };
-        geom = dCreateBox(space, door_width, wall_thickness, (h - door_height));
+        geom = dCreateBox(pw->space, door_width, wall_thickness, (h - door_height));
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
 
         pos = (Vec3){ center.x - (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f};
-        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        geom = dCreateBox(pw->space, jamb_w, wall_thickness, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
         
         pos = (Vec3){center.x + (w - jamb_w * 0.5f), wall_y, center.z + door_height * 0.5f};
-        geom = dCreateBox(space, jamb_w, wall_thickness, door_height);
+        geom = dCreateBox(pw->space, jamb_w, wall_thickness, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
     }
 
@@ -225,15 +239,15 @@ void physics_create_wall_connector(dSpaceID space, Vec3 center, Vec3 dim, Direct
         wall_x = center.x - w - t2;
 
         pos = (Vec3){ wall_x, center.y, center.z + door_height + (h - door_height) * 0.5f };
-        geom = dCreateBox(space, wall_thickness, door_width, (h - door_height));
+        geom = dCreateBox(pw->space, wall_thickness, door_width, (h - door_height));
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
 
         pos = (Vec3){wall_x, center.y - (l - jamb_l * 0.5f), center.z + door_height * 0.5f};
-        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        geom = dCreateBox(pw->space, wall_thickness, jamb_l, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
         
         pos = (Vec3){wall_x, center.y + (l - jamb_l * 0.5f), center.z + door_height * 0.5f};
-        geom = dCreateBox(space, wall_thickness, jamb_l, door_height);
+        geom = dCreateBox(pw->space, wall_thickness, jamb_l, door_height);
         dGeomSetPosition(geom, pos.x, pos.y, pos.z);
     }
 }
@@ -330,31 +344,6 @@ bool ray_intersect_obb(Vec3 ray_o, Vec3 ray_d, PhysicsBody* pb, float* tmin_out)
 
     *tmin_out = tmin;
     return true;
-}
-
-void physics_draw_obb(PhysicsBody* pb) {
-    Vec3 C[8];
-    if (!physics_get_obb_corners(pb, C)) return;
-
-    static const int E[12][2] = {
-        {0,1},{1,2},{2,3},{3,0},
-        {4,5},{5,6},{6,7},{7,4},
-        {0,4},{1,5},{2,6},{3,7}
-    };
-
-    glDisable(GL_LIGHTING);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glColor3f(1.0f, 1.0f, 0.0f);
-    glLineWidth(2.0f);
-    glBegin(GL_LINES);
-    for (int i = 0; i < 12; ++i) {
-        Vec3 a = C[E[i][0]], b = C[E[i][1]];
-        glVertex3f(a.x, a.y, a.z);
-        glVertex3f(b.x, b.y, b.z);
-    }
-    glEnd();
-    glEnable(GL_LIGHTING);
-    glLineWidth(1.0f);
 }
 
 void physics_get_position(PhysicsBody* pb, Vec3* position) {
@@ -458,12 +447,4 @@ void physics_disable_rotation(PhysicsBody* pb) {
         dJointSetAMotorParam(j, dParamLoStop + 2 * axis, 0);
         dJointSetAMotorParam(j, dParamHiStop + 2 * axis, 0);
     }
-}
-
-void physics_log_body_state(PhysicsBody* pb) {
-    Vec3 pos, rot;
-    physics_get_position(pb, &pos);
-    physics_get_rotation(pb, &rot);
-    printf("Body %p — Pos(%.2f, %.2f, %.2f) Rot(%.2f, %.2f, %.2f)\n",
-        (void*)pb->body, pos.x, pos.y, pos.z, rot.x, rot.y, rot.z);
 }

@@ -11,40 +11,41 @@ void init_scene(Scene* scene) {
     scene->material.diffuse = (ColorRGB){ 0.8, 0.8, 0.8 };
     scene->material.specular = (ColorRGB){ 0.0, 0.0, 0.0 };
     scene->material.shininess = 20.0;
-
-    int light_config_count = 0;
-    Lighting light_configs[MAX_LIGHTS];
-
-    read_light_config("config/light_config.json", light_configs, &light_config_count);
-    print_light_configs(light_configs, light_config_count);
-
-    scene->lights = calloc(light_config_count, sizeof(Lighting));
-    scene->light_count = 0;
-    for (int i = 0; i < light_config_count; i++) {
-        add_light(scene, &light_configs[i]);
-    }
-
+    set_material(&scene->material);
+    
     dReal gravity[] = { 0.0, 0.0, -9.81 };
-    scene->physics_world = init_physics(gravity);
-    physics_create_ground_plane(scene->physics_world);
+    init_physics(&scene->physics_world, gravity);
+    physics_create_ground_plane(&scene->physics_world);
 
     int room_config_count = 0;
     RoomConfig room_configs[MAX_ROOMS];
     read_room_config("config/room_config.json", room_configs, &room_config_count);
     print_room_configs(room_configs, room_config_count);
 
-    int obj_config_count = 0;
-    ObjectConfig obj_configs[MAX_OBJECTS];
-    read_object_config("config/object_config.json", obj_configs, &obj_config_count);
-    print_object_configs(obj_configs, obj_config_count);
-
     scene->rooms = calloc(room_config_count, sizeof(Room));
     scene->room_count = 0;
     for (int i = 0; i < room_config_count; i++) {
         add_room(scene, &room_configs[i]);
     }
-
+    
     place_rooms_by_connections(scene, room_configs, room_config_count);
+
+    int light_config_count = 0;
+    Lighting light_configs[MAX_LIGHTS];
+    read_light_config("config/light_config.json", light_configs, &light_config_count);
+    
+    scene->lights = calloc(light_config_count, sizeof(Lighting));
+    scene->light_count = 0;
+    for (int i = 0; i < light_config_count; i++) {
+        add_light(scene, &light_configs[i]);
+    }
+    
+    print_light_configs(scene->lights, scene->light_count);
+
+    int obj_config_count = 0;
+    ObjectConfig obj_configs[MAX_OBJECTS];
+    read_object_config("config/object_config.json", obj_configs, &obj_config_count);
+    print_object_configs(obj_configs, obj_config_count);
 
     scene->objects = calloc(obj_config_count, sizeof(Object));
     scene->object_count = 0;
@@ -63,8 +64,31 @@ void add_light(Scene* scene, Lighting* config) {
     Lighting new_light = *config;
     new_light.enabled = true;
     new_light.slot = scene->light_count;
+    
+    if (new_light.is_spotlight && new_light.room_name[0] != '\0') {
+        Room* room = find_room_by_name(scene, new_light.room_name);
+        if (room) {
+            new_light.position = (Vec4){
+                room->position.x,
+                room->position.y,
+                room->position.z + room->dimension.z,
+                1.0f
+            };
+            
+            printf("Positioned spotlight '%s' at [%.2f, %.2f, %.2f] in room '%s'\n",
+                new_light.name,
+                new_light.position.x,
+                new_light.position.y,
+                new_light.position.z,
+                new_light.room_name);
+        }
+        else {
+            printf("[WARNING]: Could not find room '%s' for light '%s'\n",
+                new_light.room_name, new_light.name);
+        }
+    }
+    
     scene->lights[scene->light_count++] = new_light;
-
     glEnable(GL_LIGHT0 + new_light.slot);
 }
 
@@ -120,6 +144,7 @@ void add_object(Scene* scene, ObjectConfig* config) {
     obj->id = scene->object_count;
     obj->is_active = true;
     obj->is_static = config->is_static;
+    obj->is_interacted = false;
     obj->value = config->value;
     obj->material = &scene->material;
     strncpy(obj->name, config->name, sizeof(obj->name) - 1);
@@ -180,7 +205,7 @@ void add_object(Scene* scene, ObjectConfig* config) {
     }
 
     if (obj->is_static) {
-        dGeomID geom = dCreateBox(scene->physics_world->space, mesh_half_ext.x * 2, mesh_half_ext.y * 2, mesh_half_ext.z * 2);
+        dGeomID geom = dCreateBox(scene->physics_world.space, mesh_half_ext.x * 2, mesh_half_ext.y * 2, mesh_half_ext.z * 2);
         calculate_mesh_aabb(&obj->model, &mesh_min, &mesh_max);
 
         dGeomSetPosition(geom,
@@ -204,13 +229,13 @@ void add_object(Scene* scene, ObjectConfig* config) {
     }
     else {
         physics_create_box(
-            scene->physics_world,
+            &scene->physics_world,
             &obj->physics_body,
             config->mass,
             obj->position,
             mesh_half_ext
         );
-
+        dBodySetData(obj->physics_body.body, obj);
         obj->display_list = glGenLists(1);
         glNewList(obj->display_list, GL_COMPILE);
         glBindTexture(GL_TEXTURE_2D, obj->texture_id);
@@ -305,7 +330,7 @@ void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_co
         for (int d = 0; d < DIR_COUNT; ++d) {
             if (!room->opening[d]) {
                 physics_create_wall_filled(
-                    scene->physics_world->space,
+                    &scene->physics_world,
                     room->position,
                     room->dimension,
                     (Direction)d,
@@ -314,7 +339,7 @@ void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_co
             }
             else {
                 physics_create_wall_connector(
-                    scene->physics_world->space,
+                    &scene->physics_world,
                     room->position,
                     room->dimension,
                     (Direction)d,
@@ -349,7 +374,7 @@ void place_objects_on_ground(Scene* scene) {
         
         Vec3 pos;
         physics_get_position(&obj->physics_body, &pos);
-        pos.z += (-min_z + 0.01f);
+        pos.z += (-min_z + 0.25f);
         physics_set_position(&obj->physics_body, pos);
         physics_set_linear_velocity(&obj->physics_body, zero_velocity);
         physics_set_angular_velocity(&obj->physics_body, zero_velocity);
@@ -408,7 +433,7 @@ void update_lighting(Scene* scene, float total_time) {
     for (int i = 0; i < scene->light_count; i++) {
         if (!scene->lights[i].enabled) continue;
 
-        if (strcmp(scene->lights[i].name, "disco") == 0) {
+        if (strcmp(scene->lights[i].name, "disco_light") == 0) {
             ColorRGB c = sine_animate_color(total_time, i);
             scene->lights[i].diffuse = (ColorRGBA){ c.red, c.green, c.blue, 1.0f };
         }
@@ -420,17 +445,14 @@ void update_scene(Scene* scene, double elapsed_time) {
     total_time += elapsed_time;
 
     update_lighting(scene, total_time);
-    physics_simulate(scene->physics_world, elapsed_time);
+    physics_simulate(&scene->physics_world, elapsed_time);
     sync_physics_transforms(scene);
+
+    
 }
 
 void render_scene(const Scene* scene) {
-    glDisable(GL_LIGHTING);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    draw_origin(1);
-    glEnable(GL_LIGHTING);
-
-    set_material(&scene->material);
+    
 
     for (int i = 0; i < scene->light_count; i++) {
         if (scene->lights[i].enabled) {
@@ -475,7 +497,7 @@ void render_scene(const Scene* scene) {
         }
         
         if (scene->selected_object_id == obj->id) {
-            physics_draw_obb(&obj->physics_body);
+            draw_bounding_box(&obj->physics_body);
         }
     }
 }
@@ -513,6 +535,7 @@ int select_object_at(Scene* scene, Camera* cam, int mx, int my, float* out_dista
 
     if (hit >= 0) {
         printf("Selected object: %s (ID: %d, Distance: %.2f)\n", scene->objects[hit].name, hit, best);
+        scene->objects[hit].is_interacted = true;
         physics_wake_up(&scene->objects[hit].physics_body);
     }
     else {

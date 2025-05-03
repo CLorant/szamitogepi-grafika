@@ -370,6 +370,31 @@ void draw_string(GLuint tex, const char* s, float start_x, float start_y, float 
     glEnd();
 }
 
+void draw_bounding_box(PhysicsBody* pb) {
+    Vec3 C[8];
+    if (!physics_get_obb_corners(pb, C)) return;
+
+    static const int E[12][2] = {
+        {0,1},{1,2},{2,3},{3,0},
+        {4,5},{5,6},{6,7},{7,4},
+        {0,4},{1,5},{2,6},{3,7}
+    };
+
+    glDisable(GL_LIGHTING);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glColor3f(1.0f, 1.0f, 0.0f);
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+    for (int i = 0; i < 12; ++i) {
+        Vec3 a = C[E[i][0]], b = C[E[i][1]];
+        glVertex3f(a.x, a.y, a.z);
+        glVertex3f(b.x, b.y, b.z);
+    }
+    glEnd();
+    glEnable(GL_LIGHTING);
+    glLineWidth(1.0f);
+}
+
 void draw_origin(float size) {
     glBegin(GL_LINES);
 
@@ -384,31 +409,6 @@ void draw_origin(float size) {
     glColor3f(0, 0, 1);
     glVertex3f(0, 0, 0);
     glVertex3f(0, 0, size);
-
-    glEnd();
-}
-
-void draw_checkerboard(int size, float square_size) {
-    glBegin(GL_QUADS);
-
-    for (int i = -size; i < size; i++) {
-        for (int j = -size; j < size; j++) {
-            if ((i + j) % 2 == 0) {
-                glColor3f(0.9, 0.9, 0.9);
-            }
-            else {
-                glColor3f(0.1, 0.1, 0.1);
-            }
-
-            float x = i * square_size;
-            float y = j * square_size;
-
-            glVertex3f(x, y, 0);
-            glVertex3f(x + square_size, y, 0);
-            glVertex3f(x + square_size, y + square_size, 0);
-            glVertex3f(x, y + square_size, 0);
-        }
-    }
 
     glEnd();
 }
@@ -449,6 +449,10 @@ Vec3 vec3_substract(Vec3 a, Vec3 b) {
 
 Vec3 vec3_scale(Vec3 v, float scale) {
     return (Vec3) { v.x* scale, v.y* scale, v.z* scale };
+}
+
+float vec3_length(Vec3 v) {
+    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 float vec3_dot(Vec3 a, Vec3 b) {

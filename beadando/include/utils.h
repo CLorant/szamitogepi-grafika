@@ -12,6 +12,7 @@
 
 typedef struct Object Object;
 typedef struct Room Room;
+typedef struct PhysicsBody PhysicsBody;
 
 /**
  * GLSL-like three dimensional vector.
@@ -73,15 +74,21 @@ typedef struct RoomConn {
 /**
  * Light source with ambient, diffuse, specular color specifications and position.
  */
-typedef struct Lighting {
+typedef struct Lighting
+{
+    bool enabled;
     int slot;
-    char name[64];
+    char name[50];
     ColorRGBA ambient;
     ColorRGBA diffuse;
     ColorRGBA specular;
     Vec4 position;
+    Vec3 direction;
+    float cutoff;
+    float exponent;
     float brightness;
-    bool enabled;
+    char room_name[64];
+    bool is_spotlight;
 } Lighting;
 
 /**
@@ -140,19 +147,14 @@ void draw_room(Room* room);
 void draw_string(GLuint charmap_id, const char* s, float start_x, float start_y, float line_height);
 
 /**
+ * Draw a yellow outline around an object's bounding.
+ */
+void draw_bounding_box(PhysicsBody* pb);
+
+/**
  * Draw the origin of the world coordinate system.
  */
 void draw_origin(float size);
-
-/**
- * Draw a checkerboard pattern on the ground.
- */
-void draw_checkerboard(int size, float square_size);
-
-/**
- * Draw the bounding box of a model.
- */
-void draw_bounding_box(Object* obj);
 
 /**
  * Apply a sine function to an RBG color based on time and light source index.
@@ -188,6 +190,11 @@ Vec3 vec3_substract(Vec3 a, Vec3 b);
  * Scale a three dimensional vector.
  */
 Vec3 vec3_scale(Vec3 v, float scale);
+
+/**
+ * Get the length of a three dimensional vector.
+ */
+float vec3_length(Vec3 v);
 
 /**
  * Get the dot product of 2 three dimensional vectors.

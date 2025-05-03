@@ -17,6 +17,7 @@ typedef struct Object {
     char name[64];
     bool is_active;
     bool is_static;
+    bool is_interacted;
     int value;
     Model model;
     Vec3 position;
@@ -67,7 +68,7 @@ typedef struct Scene {
     Object* objects;
     int object_count;
     int selected_object_id;
-    PhysicsWorld* physics_world;
+    PhysicsWorld physics_world;
 } Scene;
 
 /**

@@ -66,11 +66,11 @@ void init_app(App* app, int width, int height) {
     reshape(app, width, height);
     init_scene(&(app->scene));
 
+    SDL_SetWindowFullscreen(app->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
     app->is_dragging = false;
     app->is_fullscreen = true;
     app->is_running = true;
-    
-    SDL_SetWindowFullscreen(app->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
 
 void init_opengl() {
