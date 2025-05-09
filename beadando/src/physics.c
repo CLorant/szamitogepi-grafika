@@ -39,16 +39,19 @@ static void near_callback(void* data, dGeomID o1, dGeomID o2) {
         if (obj1 && !obj1->is_static && obj1->is_active) {
             Vec3 v1, v2, dv;
             physics_get_linear_velocity(&obj1->physics_body, &v1);
+            
             if (b2) {
                 physics_get_linear_velocity(&obj2->physics_body, &v2);
-            } else {
+            }
+            else {
                 v2 = (Vec3){0,0,0};
             }
+
             dv = vec3_substract(v1, v2);
             float speed = vec3_length(dv);
-            
             float damage = speed * 0.1f;  
             obj1->value -= damage;
+
             if (obj1->value <= 0.0f) {
                 obj1->is_active = false;
                 
@@ -59,24 +62,27 @@ static void near_callback(void* data, dGeomID o1, dGeomID o2) {
     }
 }
 
-void init_physics(PhysicsWorld* pw, const dReal gravity[3]) {
+void init_physics(PhysicsWorld* pw) {
     dInitODE2(0);
 
     pw->world = dWorldCreate();
     pw->space = dHashSpaceCreate(NULL);
     pw->contact_group = dJointGroupCreate(0);
 
-    memcpy(pw->gravity, gravity, 3 * sizeof(dReal));
-    dWorldSetGravity(pw->world, gravity[0], gravity[1], gravity[2]);
-
     PhysicsConfig cfg = physics_default_config();
     physics_apply_config(pw, &cfg);
 }
 
+void physics_init_gravity(PhysicsWorld* pw, const dReal gravity[3]) {
+    memcpy(pw->gravity, gravity, 3 * sizeof(dReal));
+    dWorldSetGravity(pw->world, gravity[0], gravity[1], gravity[2]);
+}
+
 PhysicsConfig physics_default_config() {
     PhysicsConfig cfg = {
-        .erp = 1.0,
-        .cfm = 0.0001,
+        .max_correcting_vel = 0.9,
+        .erp = 0.2,
+        .cfm = 1e-5f,
         .linear_damping = 0.01,
         .angular_damping = 0.05,
         .surface_friction = 0.7,
@@ -98,6 +104,7 @@ void physics_apply_config(PhysicsWorld* pw, PhysicsConfig* cfg) {
 
     dWorldSetERP(pw->world, cfg->erp);
     dWorldSetCFM(pw->world, cfg->cfm);
+    dWorldSetContactMaxCorrectingVel(pw->world, cfg->max_correcting_vel);
     dWorldSetLinearDamping(pw->world, cfg->linear_damping);
     dWorldSetAngularDamping(pw->world, cfg->angular_damping);
 

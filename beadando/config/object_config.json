@@ -15,7 +15,7 @@
       "name": "cube",
       "model_path": "assets/models/cube.obj",
       "texture_path": "assets/textures/cube.jpg",
-      "offset": [0.2, 0.2, 0.1],
+      "offset": [0.3, 0.3, 0.1],
       "rotation": [0, 0, 0],
       "scale": [0.5, 0.5, 0.5],
       "mass": 1.5,
@@ -70,5 +70,17 @@
         "value": 1000,
         "room_name": "disco_room",
         "is_static": false
+    },
+    {
+        "name": "chair",
+        "model_path": "assets/models/chair.obj",
+        "texture_path": "assets/textures/default_obj.jpg",
+        "offset": [-0.5, -0.5, 0.1],
+        "rotation": [90, 0, 0],
+        "scale": [0.01, 0.01, 0.01],
+        "mass": 3.5,
+        "value": 1000,
+        "room_name": "start_room",
+        "is_static": true
     }
 ]

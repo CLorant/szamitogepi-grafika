@@ -1,4 +1,5 @@
 #include "config.h"
+#include "scene.h"
 #include <json-c/json.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,21 +90,30 @@ static void parse_room_connections(json_object* item, RoomConfig* cfg) {
     if (!conns || !json_object_is_type(conns, json_type_array)) return;
 
     int m = json_object_array_length(conns);
-    cfg->connections = calloc(m, sizeof(RoomConn));
     cfg->connection_count = m;
+
+    for (int d = 0; d < DIR_COUNT; d++) {
+        cfg->connections[d].room[0] = '\0';
+        cfg->connections[d].dir = d;
+    }
 
     for (int c = 0; c < m; c++) {
         json_object* conn = json_object_array_get_idx(conns, c);
         
         const char* peer = json_object_get_string(json_object_object_get(conn, "room"));
-        if (peer) strncpy(cfg->connections[c].room, peer, sizeof(cfg->connections[c].room) - 1);
-        
         const char* dir_str = json_object_get_string(json_object_object_get(conn, "dir"));
+        
+        Direction dir = DIR_NORTH;
         if (dir_str) {
-            if (strcmp(dir_str, "north") == 0) cfg->connections[c].dir = 0;
-            else if (strcmp(dir_str, "east") == 0) cfg->connections[c].dir = 1;
-            else if (strcmp(dir_str, "south") == 0) cfg->connections[c].dir = 2;
-            else if (strcmp(dir_str, "west") == 0) cfg->connections[c].dir = 3;
+            if (strcmp(dir_str, "north") == 0)  dir = DIR_NORTH;
+            else if (strcmp(dir_str, "east") == 0) dir = DIR_EAST;
+            else if (strcmp(dir_str, "south") == 0) dir = DIR_SOUTH;
+            else if (strcmp(dir_str, "west") == 0) dir = DIR_WEST;
+        }
+        
+        if (peer) {
+            strncpy(cfg->connections[dir].room, peer, sizeof(cfg->connections[dir].room) - 1);
+            cfg->connections[dir].dir = dir;
         }
     }
 }
@@ -187,35 +197,29 @@ void read_light_config(const char* filename, Lighting* light_configs, int* light
         json_get_rgba_field(item, "diffuse", &cfg.diffuse);
         json_get_rgba_field(item, "specular", &cfg.specular);
 
-        // Default values
         cfg.is_spotlight = false;
-        cfg.cutoff = 180.0f;  // Not a spotlight by default
+        cfg.cutoff = 180.0f;
         cfg.exponent = 0.0f;
-        cfg.direction = (Vec3){0.0f, -1.0f, 0.0f}; // Default: pointing down
+        cfg.direction = (Vec3){0.0f, -1.0f, 0.0f};
         cfg.room_name[0] = '\0';
 
-        // Check if this is the global light
         if (strcmp(cfg.name, "global") == 0) {
-            // Global light - not a spotlight
             json_get_vec4_field(item, "position", &cfg.position);
             cfg.is_spotlight = false;
-        } else {
-            // Spotlight
+        }
+        else {
             cfg.is_spotlight = true;
             
-            // Get the room this light belongs to
             json_get_string_field(item, "room", cfg.room_name, sizeof(cfg.room_name));
             
-            // Get spotlight parameters if specified
             json_object* direction_obj = json_object_object_get(item, "direction");
             if (direction_obj && json_object_is_type(direction_obj, json_type_array)) {
                 json_get_vec3_field(item, "direction", &cfg.direction);
             }
             
-            cfg.cutoff = json_get_float_field(item, "cutoff", 30.0f);    // Default 30 degrees
-            cfg.exponent = json_get_float_field(item, "exponent", 10.0f); // Default exponent
+            cfg.cutoff = json_get_float_field(item, "cutoff", 30.0f);
+            cfg.exponent = json_get_float_field(item, "exponent", 10.0f);
             
-            // Position will be set later based on room dimensions
             cfg.position = (Vec4){0.0f, 0.0f, 0.0f, 1.0f};
         }
 

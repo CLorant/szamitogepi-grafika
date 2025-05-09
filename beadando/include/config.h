@@ -3,6 +3,8 @@
 
 #include "utils.h"
 
+typedef struct Lighting Lighting;
+
 /**
  * Configuration for an object.
  */
@@ -28,7 +30,7 @@ typedef struct RoomConfig {
     char floor_tex_path[256];
     char ceiling_tex_path[256];
     char wall_tex_path[256];
-    RoomConn* connections;
+    Connection connections[DIR_COUNT];
     int connection_count;
 } RoomConfig;
 

@@ -1,4 +1,5 @@
 #include "app.h"
+#include "draw.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -83,7 +84,7 @@ void init_opengl() {
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
+    
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glClearDepth(1.0);
@@ -393,56 +394,3 @@ void handle_mouse_wheel(App* app, int y_wheel) {
     }
 }
 
-void draw_crosshair(const App* app) {
-    float aspect_ratio = app->camera.aspect_ratio;
-    float size = 0.02f;
-    
-    glDisable(GL_DEPTH_TEST);
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glColor3f(0.5f, 0.5f, 0.5f);
-    glLineWidth(2.0f);
-    glBegin(GL_LINES);
-
-    glVertex2f(-size / aspect_ratio, 0.0f);
-    glVertex2f(size / aspect_ratio, 0.0f);
-    
-    glVertex2f(0.0f, -size);
-    glVertex2f(0.0f, size);
-    
-    glEnd();
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    
-    glMatrixMode(GL_MODELVIEW);
-    glEnable(GL_DEPTH_TEST);
-}
-
-void draw_manual(const App* app) {
-    glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glTranslatef(0.0f, 0.0f, -app->manual.distance);
-    glTranslatef(0.0f, -app->manual.scroll, 0.0f);
-    glRotatef(180.0f, 1.0f, 0.0f, 0.0f);
-    draw_string(
-        app->manual.charmap_id,
-        app->manual.text,
-        app->manual.start_x,
-        app->manual.start_y,
-        app->manual.line_height
-    );
-    glPopMatrix();
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-}

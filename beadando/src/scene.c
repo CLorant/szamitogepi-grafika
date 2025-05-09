@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "draw.h"
 #include <obj/load.h>
 #include <obj/draw.h>
 #include <math.h>
@@ -7,15 +8,13 @@
 #include <stdio.h>
 
 void init_scene(Scene* scene) {
-    scene->material.ambient = (ColorRGB){ 0.0, 0.0, 0.0 };
+    scene->material.ambient = (ColorRGB){ 0.2, 0.2, 0.2 };
     scene->material.diffuse = (ColorRGB){ 0.8, 0.8, 0.8 };
-    scene->material.specular = (ColorRGB){ 0.0, 0.0, 0.0 };
+    scene->material.specular = (ColorRGB){ 0.2, 0.2, 0.2 };
     scene->material.shininess = 20.0;
     set_material(&scene->material);
     
-    dReal gravity[] = { 0.0, 0.0, -9.81 };
-    init_physics(&scene->physics_world, gravity);
-    physics_create_ground_plane(&scene->physics_world);
+    init_physics(&scene->physics_world);
 
     int room_config_count = 0;
     RoomConfig room_configs[MAX_ROOMS];
@@ -27,19 +26,19 @@ void init_scene(Scene* scene) {
     for (int i = 0; i < room_config_count; i++) {
         add_room(scene, &room_configs[i]);
     }
-    
-    place_rooms_by_connections(scene, room_configs, room_config_count);
+
+    place_rooms_by_connections(scene);
 
     int light_config_count = 0;
     Lighting light_configs[MAX_LIGHTS];
     read_light_config("config/light_config.json", light_configs, &light_config_count);
-    
+
     scene->lights = calloc(light_config_count, sizeof(Lighting));
     scene->light_count = 0;
     for (int i = 0; i < light_config_count; i++) {
         add_light(scene, &light_configs[i]);
     }
-    
+
     print_light_configs(scene->lights, scene->light_count);
 
     int obj_config_count = 0;
@@ -55,6 +54,10 @@ void init_scene(Scene* scene) {
     }
 
     place_objects_on_ground(scene);
+    physics_create_ground_plane(&scene->physics_world);
+
+    dReal gravity[] = { 0.0, 0.0, -8.0 };
+    physics_init_gravity(&scene->physics_world, gravity);
 
     printf("Scene initialized with %d lights, %d objects in %d rooms\n",
         scene->light_count, scene->object_count, scene->room_count);
@@ -64,7 +67,7 @@ void add_light(Scene* scene, Lighting* config) {
     Lighting new_light = *config;
     new_light.enabled = true;
     new_light.slot = scene->light_count;
-    
+
     if (new_light.is_spotlight && new_light.room_name[0] != '\0') {
         Room* room = find_room_by_name(scene, new_light.room_name);
         if (room) {
@@ -74,7 +77,7 @@ void add_light(Scene* scene, Lighting* config) {
                 room->position.z + room->dimension.z,
                 1.0f
             };
-            
+
             printf("Positioned spotlight '%s' at [%.2f, %.2f, %.2f] in room '%s'\n",
                 new_light.name,
                 new_light.position.x,
@@ -87,7 +90,7 @@ void add_light(Scene* scene, Lighting* config) {
                 new_light.room_name, new_light.name);
         }
     }
-    
+
     scene->lights[scene->light_count++] = new_light;
     glEnable(GL_LIGHT0 + new_light.slot);
 }
@@ -99,7 +102,11 @@ void add_room(Scene* scene, RoomConfig* config) {
     room->dimension = config->dimension;
     room->position = (Vec3){ 0,0,0 };
     for (int d = 0; d < DIR_COUNT; ++d) {
-        room->opening[d] = false;
+        strncpy(room->connections[d].room,
+            config->connections[d].room,
+            sizeof(room->connections[d].room) - 1
+        );
+        room->connections[d].dir = config->connections[d].dir;
     }
 
     if (config->floor_tex_path[0] != '\0') {
@@ -146,7 +153,7 @@ void add_object(Scene* scene, ObjectConfig* config) {
     obj->is_static = config->is_static;
     obj->is_interacted = false;
     obj->value = config->value;
-    obj->material = &scene->material;
+    obj->material = scene->material;
     strncpy(obj->name, config->name, sizeof(obj->name) - 1);
 
     obj->rotation = config->rotation;
@@ -228,6 +235,7 @@ void add_object(Scene* scene, ObjectConfig* config) {
         glEndList();
     }
     else {
+        obj->half_height = mesh_half_ext.z;
         physics_create_box(
             &scene->physics_world,
             &obj->physics_body,
@@ -247,7 +255,34 @@ void add_object(Scene* scene, ObjectConfig* config) {
     printf("Added object %d: %s\n\n", obj->id, obj->name);
 }
 
-void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_count) {
+bool needs_connector(Room* room, Room* neighbor, Direction dir) {
+    if (room->dimension.z > neighbor->dimension.z) {
+        return true;
+    }
+
+    if (dir == DIR_NORTH || dir == DIR_SOUTH) {
+        return room->dimension.x > neighbor->dimension.x;
+    }
+
+    return room->dimension.y > neighbor->dimension.y;
+}
+
+void place_rooms_by_connections(Scene* scene) {
+    for (int i = 0; i < scene->room_count; i++) {
+        Room* room = &scene->rooms[i];
+
+        for (int d = 0; d < DIR_COUNT; d++) {
+            if (room->connections[d].room[0] == '\0') continue;
+
+            for (int j = 0; j < scene->room_count; j++) {
+                if (strcmp(scene->rooms[j].name, room->connections[d].room) == 0) {
+                    room->connections[d].id = j;
+                    break;
+                }
+            }
+        }
+    }
+
     RoomPlacement placement[MAX_ROOMS] = { {0} };
     for (int i = 0; i < scene->room_count; ++i) {
         placement[i].idx = i;
@@ -260,9 +295,10 @@ void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_co
     for (int i = 0; i < scene->room_count; ++i) {
         if (strcmp(scene->rooms[i].name, "start_room") == 0) {
             start_idx = i;
+            break;
         }
     }
-        
+
     if (start_idx < 0) start_idx = 0;
 
     placement[start_idx].placed = true;
@@ -273,54 +309,39 @@ void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_co
     queue[qt++] = start_idx;
 
     while (qh < qt) {
-        int pi = queue[qh++];
-        Room* parent = &scene->rooms[pi];
-        RoomConfig* rc = NULL;
-        for (int i = 0; i < config_count; ++i)
-            if (strcmp(configs[i].name, parent->name) == 0) {
-                rc = &configs[i];
-            }
-                
-        if (!rc) continue;
+        int current_idx = queue[qh++];
+        Room* current_room = &scene->rooms[current_idx];
 
-        for (int i = 0; i < rc->connection_count; ++i) {
-            char* peer_name = rc->connections[i].room;
-            int  dir = rc->connections[i].dir;
+        for (int d = 0; d < DIR_COUNT; d++) {
+            if (current_room->connections[d].room[0] == '\0') continue;
 
-            int peer_idx = -1;
-            for (int j = 0; j < scene->room_count; ++j)
-                if (strcmp(scene->rooms[j].name, peer_name) == 0) {
-                    peer_idx = j;
-                }
-                    
-            if (peer_idx < 0) continue;
+            int neighbor_idx = current_room->connections[d].id;
+            Direction dir = current_room->connections[d].dir;
 
-            if (!placement[peer_idx].placed) {
+            if (neighbor_idx < 0 || neighbor_idx >= scene->room_count) continue;
+
+            Room* neighbor_room = &scene->rooms[neighbor_idx];
+
+            if (!placement[neighbor_idx].placed) {
                 int dx, dy;
                 get_delta(dir, &dx, &dy);
 
-                placement[peer_idx].gx = placement[pi].gx + dx;
-                placement[peer_idx].gy = placement[pi].gy + dy;
-                placement[peer_idx].placed = true;
+                placement[neighbor_idx].gx = placement[current_idx].gx + dx;
+                placement[neighbor_idx].gy = placement[current_idx].gy + dy;
+                placement[neighbor_idx].placed = true;
 
-                Room* parent = &scene->rooms[pi];
-                Room* peer = &scene->rooms[peer_idx];
-                float shift_x = dx * (parent->dimension.x * 0.5f + peer->dimension.x * 0.5f);
-                float shift_y = dy * (parent->dimension.y * 0.5f + peer->dimension.y * 0.5f);
+                float shift_x = dx * (current_room->dimension.x * 0.5f + neighbor_room->dimension.x * 0.5f);
+                float shift_y = dy * (current_room->dimension.y * 0.5f + neighbor_room->dimension.y * 0.5f);
 
-                peer->position.x = parent->position.x + shift_x;
-                peer->position.y = parent->position.y + shift_y;
-                peer->position.z = parent->position.z;
+                neighbor_room->position.x = current_room->position.x + shift_x;
+                neighbor_room->position.y = current_room->position.y + shift_y;
+                neighbor_room->position.z = current_room->position.z;
 
                 printf("Placing %s at (%.1f,%.1f)\n",
-                    peer->name, peer->position.x, peer->position.y
-                );
+                    neighbor_room->name, neighbor_room->position.x, neighbor_room->position.y);
 
-                queue[qt++] = peer_idx;
+                queue[qt++] = neighbor_idx;
             }
-
-            parent->opening[dir] = true;
-            scene->rooms[peer_idx].opening[(dir + 2) % 4] = true;
         }
     }
 
@@ -328,7 +349,7 @@ void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_co
         Room* room = &scene->rooms[i];
 
         for (int d = 0; d < DIR_COUNT; ++d) {
-            if (!room->opening[d]) {
+            if (room->connections[d].room[0] == '\0') {
                 physics_create_wall_filled(
                     &scene->physics_world,
                     room->position,
@@ -338,6 +359,12 @@ void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_co
                 );
             }
             else {
+                int neighbor_idx = room->connections[d].id;
+                if (neighbor_idx < 0 || neighbor_idx >= scene->room_count) continue;
+
+                Room* neighbor_room = &scene->rooms[neighbor_idx];
+                if (!needs_connector(room, neighbor_room, d)) continue;
+
                 physics_create_wall_connector(
                     &scene->physics_world,
                     room->position,
@@ -352,7 +379,7 @@ void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_co
 
         scene->rooms[i].display_list = glGenLists(1);
         glNewList(scene->rooms[i].display_list, GL_COMPILE);
-        draw_room(&scene->rooms[i]);
+        draw_room(&scene->rooms[i], scene);
         glEndList();
     }
 }
@@ -371,10 +398,10 @@ void place_objects_on_ground(Scene* scene) {
         for (int j = 1; j < 8; j++) {
             if (C[j].z < min_z) min_z = C[j].z;
         }
-        
+
         Vec3 pos;
         physics_get_position(&obj->physics_body, &pos);
-        pos.z += (-min_z + 0.25f);
+        pos.z += (-min_z + obj->half_height + 0.25f);
         physics_set_position(&obj->physics_body, pos);
         physics_set_linear_velocity(&obj->physics_body, zero_velocity);
         physics_set_angular_velocity(&obj->physics_body, zero_velocity);
@@ -425,7 +452,55 @@ void adjust_brightness(Scene* scene, float amount) {
         if (!scene->lights[i].enabled) continue;
 
         brightness = scene->lights[i].brightness + amount;
-        scene->lights[i].brightness = fminf(fmaxf(brightness, 0.1f), 1.0f);
+        scene->lights[i].brightness = fminf(fmaxf(brightness, 0.1f), 2.0f);
+    }
+}
+
+void set_lighting(int slot, const Lighting* light) {
+    GLenum light_enum = GL_LIGHT0 + slot;
+
+    float ambient_light[] = {
+        light->ambient.red,
+        light->ambient.green,
+        light->ambient.blue,
+        light->ambient.alpha
+    };
+
+    float diffuse_light[] = {
+        light->diffuse.red * light->brightness,
+        light->diffuse.green * light->brightness,
+        light->diffuse.blue * light->brightness,
+        light->diffuse.alpha
+    };
+
+    float specular_light[] = {
+        light->specular.red,
+        light->specular.green,
+        light->specular.blue,
+        light->specular.alpha
+    };
+
+    float light_position[] = {
+        light->position.x,
+        light->position.y,
+        light->position.z,
+        light->position.w
+    };
+
+    glLightfv(light_enum, GL_AMBIENT, ambient_light);
+    glLightfv(light_enum, GL_DIFFUSE, diffuse_light);
+    glLightfv(light_enum, GL_SPECULAR, specular_light);
+    glLightfv(light_enum, GL_POSITION, light_position);
+
+    if (light->is_spotlight) {
+        float spot_direction[] = {
+            light->direction.x,
+            light->direction.y,
+            light->direction.z
+        };
+        glLightfv(light_enum, GL_SPOT_DIRECTION, spot_direction);
+        glLightf (light_enum, GL_SPOT_CUTOFF, light->cutoff);
+        glLightf (light_enum, GL_SPOT_EXPONENT, light->exponent);
     }
 }
 
@@ -447,13 +522,9 @@ void update_scene(Scene* scene, double elapsed_time) {
     update_lighting(scene, total_time);
     physics_simulate(&scene->physics_world, elapsed_time);
     sync_physics_transforms(scene);
-
-    
 }
 
 void render_scene(const Scene* scene) {
-    
-
     for (int i = 0; i < scene->light_count; i++) {
         if (scene->lights[i].enabled) {
             glEnable(GL_LIGHT0 + scene->lights[i].slot);
@@ -467,10 +538,12 @@ void render_scene(const Scene* scene) {
     for (int i = 0; i < scene->room_count; i++) {
         glCallList(scene->rooms[i].display_list);
     }
-    
+
     for (int i = 0; i < scene->object_count; i++) {
         Object* obj = &scene->objects[i];
         if (!obj->is_active) continue;
+
+        set_material(&obj->material);
 
         if (obj->is_static) {
             glCallList(obj->display_list);
@@ -495,7 +568,7 @@ void render_scene(const Scene* scene) {
             glCallList(obj->display_list);
             glPopMatrix();
         }
-        
+
         if (scene->selected_object_id == obj->id) {
             draw_bounding_box(&obj->physics_body);
         }
@@ -525,6 +598,7 @@ int select_object_at(Scene* scene, Camera* cam, int mx, int my, float* out_dista
 
         float t;
         if (ray_intersect_obb(cam->position, dir, &obj->physics_body, &t) && t < best) {
+            if (t > 3.0f) continue;
             best = t;
             hit = obj->id;
             if (out_distance) {
@@ -554,13 +628,13 @@ void move_selected_object(Scene* scene, Vec3 target_position) {
 
     Vec3 velocity;
     physics_get_linear_velocity(&obj->physics_body, &velocity);
-    
+
     Vec3 delta = vec3_substract(target_position, current);
 
     dMass mInfo;
     dBodyGetMass(obj->physics_body.body, &mInfo);
     float mass = (float)mInfo.mass;
-    float invMass = (mass > 0.0001f ? 1.0f/mass : 1.0f);
+    float invMass = (mass > 0.0001f ? 1.0f / mass : 1.0f);
     Vec3 vel = vec3_scale(delta, 5.0f * invMass);
 
     physics_set_linear_velocity(&obj->physics_body, vel);

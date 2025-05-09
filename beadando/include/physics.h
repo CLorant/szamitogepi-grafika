@@ -40,6 +40,7 @@ typedef struct PhysicsBody {
 typedef struct PhysicsConfig {
     double erp;
     double cfm;
+    double max_correcting_vel;
     double linear_damping;
     double angular_damping;
     double surface_friction;
@@ -53,7 +54,12 @@ typedef struct PhysicsConfig {
 /**
  * Initialize global physics.
  */
-void init_physics(PhysicsWorld* pw, const dReal gravity[3]);
+void init_physics(PhysicsWorld* pw);
+
+/**
+ * Initialize global gravity.
+ */
+void physics_init_gravity(PhysicsWorld* pw, const dReal gravity[3]);
 
 /**
  * Clean up physics.

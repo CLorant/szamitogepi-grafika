@@ -6,6 +6,7 @@
 #include "texture.h"
 #include "utils.h"
 #include "physics.h"
+#include "model.h"
 #include <obj/model.h>
 #include <limits.h>
 
@@ -19,10 +20,11 @@ typedef struct Object {
     bool is_static;
     bool is_interacted;
     int value;
+    float half_height;
     Model model;
     Vec3 position;
     Vec3 rotation;
-    Material* material;
+    Material material;
     PhysicsBody physics_body;
     GLuint texture_id;
     GLuint display_list;
@@ -49,12 +51,31 @@ typedef struct Room {
     GLuint floor_tex;
     GLuint ceiling_tex;
     GLuint wall_tex;
-    bool opening[DIR_COUNT];
+    Connection connections[DIR_COUNT];
     float wall_thickness;
     float door_width;
     float door_height;
     GLuint display_list;
 } Room;
+
+/**
+ * Light source with ambient, diffuse, specular color specifications and position.
+ */
+typedef struct Lighting {
+    bool enabled;
+    int slot;
+    char name[50];
+    ColorRGBA ambient;
+    ColorRGBA diffuse;
+    ColorRGBA specular;
+    Vec4 position;
+    Vec3 direction;
+    float cutoff;
+    float exponent;
+    float brightness;
+    char room_name[64];
+    bool is_spotlight;
+} Lighting;
 
 /**
  * Scene containing light sources, rooms and objects.
@@ -92,9 +113,14 @@ void add_room(Scene* scene, RoomConfig* config);
 void add_object(Scene* scene, ObjectConfig* config);
 
 /**
+ * Determine if a connector wall needs to be added.
+ */
+bool needs_connector(Room* room, Room* neighbor, Direction dir);
+
+/**
  * Use BFS to place the rooms in world-space by connection.
  */
-void place_rooms_by_connections(Scene* scene, RoomConfig* configs, int config_count);
+void place_rooms_by_connections(Scene* scene);
 
 /**
  * Initialize the object
@@ -127,6 +153,16 @@ Object* find_object_by_id(Scene* scene, int id);
 void adjust_brightness(Scene* scene, float amount);
 
 /**
+ * Set a light source of the scene.
+ */
+void set_lighting(int slot, const Lighting* light);
+
+/**
+ * Update the lighting based on elapsed time.
+ */
+void update_lighting(Scene* scene, float elapsed_time);
+
+/**
  * Update the scene.
  */
 void update_scene(Scene* scene, double elapsed_time);
@@ -140,11 +176,6 @@ void render_scene(const Scene* scene);
  * Synchronize physics and rendering
  */
 void sync_physics_transforms(Scene* scene);
-
-/**
- * Position objects on the ground initially
- */
-void place_objects_on_ground(Scene* scene);
 
 /**
  * Check if mouse coordinates intersect with an object

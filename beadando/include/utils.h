@@ -1,18 +1,12 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <obj/model.h>
 #include <stdbool.h>
-#include <GL/gl.h>
 
 #define EPSILON 1e-6f
 #define MAX_LIGHTS 8
 #define MAX_OBJECTS 64
 #define MAX_ROOMS 32
-
-typedef struct Object Object;
-typedef struct Room Room;
-typedef struct PhysicsBody PhysicsBody;
 
 /**
  * GLSL-like three dimensional vector.
@@ -53,7 +47,7 @@ typedef struct ColorRGBA {
 } ColorRGBA;
 
 /**
- * Direction enum with counter
+ * Direction enum with counter.
  */
 typedef enum Direction {
     DIR_NORTH,
@@ -64,57 +58,13 @@ typedef enum Direction {
 } Direction;
 
 /**
- * Room connections
+ * Room connections.
  */
-typedef struct RoomConn {
+typedef struct Connection {
+    int id;
     char room[64];
-    int dir;
-} RoomConn;
-
-/**
- * Light source with ambient, diffuse, specular color specifications and position.
- */
-typedef struct Lighting
-{
-    bool enabled;
-    int slot;
-    char name[50];
-    ColorRGBA ambient;
-    ColorRGBA diffuse;
-    ColorRGBA specular;
-    Vec4 position;
-    Vec3 direction;
-    float cutoff;
-    float exponent;
-    float brightness;
-    char room_name[64];
-    bool is_spotlight;
-} Lighting;
-
-/**
- * Material with ambient, diffuse, specular color specifications and shininess.
- */
-typedef struct Material {
-    ColorRGB ambient;
-    ColorRGB diffuse;
-    ColorRGB specular;
-    float shininess;
-} Material;
-
-/**
- * Scale the vertices of a model.
- */
-void scale_model(Model* model, Vec3 scale);
-
-/**
- * Rotate the vertices of a model.
- */
-void rotate_model(Model* model, Vec3 rotation);
-
-/**
- * Calculate the bounding box of a model.
- */
-void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max);
+    Direction dir;
+} Connection;
 
 /**
  * Check if any of the x, y, z slabs of the object was hit.
@@ -125,36 +75,6 @@ bool slab_hit(float origin, float dir, float min_box, float max_box, float *tmin
  * Get the delta (-1, 0, 1) of a direction.
  */
 void get_delta(int dir, int* dx, int* dy);
-
-/**
- * Set a light source of the scene.
- */
-void set_lighting(int slot, const Lighting* light);
-
-/**
- * Set the current material.
- */
-void set_material(const Material* material);
-
-/**
- * Draw a room of the scene.
- */
-void draw_room(Room* room);
-
-/**
- * Draw a line of text.
- */
-void draw_string(GLuint charmap_id, const char* s, float start_x, float start_y, float line_height);
-
-/**
- * Draw a yellow outline around an object's bounding.
- */
-void draw_bounding_box(PhysicsBody* pb);
-
-/**
- * Draw the origin of the world coordinate system.
- */
-void draw_origin(float size);
 
 /**
  * Apply a sine function to an RBG color based on time and light source index.

@@ -102,14 +102,4 @@ void handle_move_selected_object(App* app, int dx, int dy);
  */
 void handle_mouse_wheel(App* app, int y_wheel);
 
-/**
- * Draw a crosshair in the center of the screen.
- */
-void draw_crosshair(const App* app);
-
-/**
- * Render the manual.
- */
-void draw_manual(const App* app);
-
 #endif /* APP_H */
