@@ -12,18 +12,6 @@
       "is_static": false
     },
     {
-      "name": "cube",
-      "model_path": "assets/models/cube.obj",
-      "texture_path": "assets/textures/cube.jpg",
-      "offset": [0.3, 0.3, 0.1],
-      "rotation": [0, 0, 0],
-      "scale": [0.5, 0.5, 0.5],
-      "mass": 1.5,
-      "value": 1000,
-      "room_name": "start_room",
-      "is_static": false
-    },
-    {
         "name": "deer",
         "model_path": "assets/models/deer.obj",
         "texture_path": "assets/textures/default_obj.jpg",
@@ -50,10 +38,10 @@
     {
         "name": "gun",
         "model_path": "assets/models/gun.obj",
-        "texture_path": "assets/textures/default_obj.jpg",
+        "texture_path": "assets/textures/metal_rough.jpg",
         "offset": [-0.4, -0.4, 0.1],
-        "rotation": [90, 0, 0],
-        "scale": [0.25, 0.25, 0.25],
+        "rotation": [0, 0, 0],
+        "scale": [0.15, 0.15, 0.15],
         "mass": 1.0,
         "value": 1000,
         "room_name": "disco_room",
@@ -65,22 +53,70 @@
         "texture_path": "assets/textures/raptor.png",
         "offset": [-0.2, 0.0, 0.1],
         "rotation": [0, 0, 0],
-        "scale": [0.5, 0.5, 0.5],
+        "scale": [1, 1, 1],
         "mass": 3.5,
         "value": 1000,
         "room_name": "disco_room",
         "is_static": false
     },
     {
-        "name": "chair",
+        "name": "lamp1",
+        "model_path": "assets/models/hanging_lamp.obj",
+        "texture_path": "assets/textures/plaster_gray.jpg",
+        "offset": [0.0, 0.0, 3.0],
+        "rotation": [90, 0, 0],
+        "scale": [1.25, 1.25, 1.25],
+        "room_name": "start_room",
+        "is_static": true
+    },
+    {
+        "name": "lamp2",
+        "model_path": "assets/models/hanging_lamp.obj",
+        "texture_path": "assets/textures/plaster_gray.jpg",
+        "offset": [0.0, 0.0, 3.0],
+        "rotation": [90, 0, 0],
+        "scale": [1.25, 1.25, 1.25],
+        "room_name": "final_room",
+        "is_static": true
+    },
+    {
+        "name": "chair1",
         "model_path": "assets/models/chair.obj",
-        "texture_path": "assets/textures/default_obj.jpg",
-        "offset": [-0.5, -0.5, 0.1],
+        "texture_path": "assets/textures/wood_light.jpg",
+        "offset": [-0.75, 0.8, 0.0],
         "rotation": [90, 0, 0],
         "scale": [0.01, 0.01, 0.01],
-        "mass": 3.5,
-        "value": 1000,
         "room_name": "start_room",
+        "is_static": true
+    },
+    {
+        "name": "chair2",
+        "model_path": "assets/models/chair.obj",
+        "texture_path": "assets/textures/wood_light.jpg",
+        "offset": [-0.75, 0.2, 0.0],
+        "rotation": [90, 0, 180],
+        "scale": [0.01, 0.01, 0.01],
+        "room_name": "start_room",
+        "is_static": true
+    },
+    {
+        "name": "table",
+        "model_path": "assets/models/table.obj",
+        "texture_path": "assets/textures/wood_light.jpg",
+        "offset": [-0.8, 0.5, 0.0],
+        "rotation": [90, 0, 0],
+        "scale": [0.1, 0.1, 0.1],
+        "room_name": "start_room",
+        "is_static": true
+    },
+    {
+        "name": "discoball",
+        "model_path": "assets/models/discoball.obj",
+        "texture_path": "assets/textures/plaster_light.jpg",
+        "offset": [0.0, 0.0, 3.0],
+        "rotation": [90, 0, 0],
+        "scale": [0.025, 0.025, 0.025],
+        "room_name": "disco_room",
         "is_static": true
     }
 ]

@@ -28,7 +28,7 @@ void draw_string(GLuint tex, const char* s, float start_x, float start_y, float 
 /**
  * Draw a quad with texture coordinates.
  */
-void draw_textured_quad(float tex_coords[4][2], float vertices[4][3]);
+void draw_textured_quad(float normal[3], float tex_coords[4][2], float vertices[4][3]);
 
 /**
  * Draw a room of the scene.

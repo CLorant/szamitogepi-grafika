@@ -99,10 +99,11 @@ void draw_string(GLuint tex, const char* s, float start_x, float start_y, float 
     glEnd();
 }
 
-void draw_textured_quad(float tex_coords[4][2], float vertices[4][3]) {
+void draw_textured_quad(float normal[3], float tex_coords[4][2], float vertices[4][3]) {
     glBegin(GL_QUADS);
-
+    
     for (int i = 0; i < 4; i++) {
+        glNormal3fv(normal);
         glTexCoord2fv(tex_coords[i]);
         glVertex3fv(vertices[i]);
     }
@@ -124,13 +125,14 @@ void draw_room(Room* room, Scene* scene) {
 
     float v1 = door_h / h;
     float u1, u2;
-
+    
+    float normal_z[3] = {0, 0, 1};
     float solid_uv[4][2] = { {0, 0}, {1, 0}, {1, 1}, {0, 1} };
     float top_uv[4][2] = { {0, v1}, {1, v1}, {1, 1}, {0, 1} };
 
     glBindTexture(GL_TEXTURE_2D, room->floor_tex);
     draw_textured_quad(
-        solid_uv,
+        normal_z, solid_uv,
         (float[4][3]) {
             { px - w, py - l, pz },
             { px + w, py - l, pz },
@@ -141,7 +143,7 @@ void draw_room(Room* room, Scene* scene) {
 
     glBindTexture(GL_TEXTURE_2D, room->ceiling_tex);
     draw_textured_quad(
-        solid_uv,
+        normal_z, solid_uv,
         (float[4][3]) {
             { px - w, py - l, pz + h },
             { px + w, py - l, pz + h },
@@ -190,7 +192,7 @@ void draw_room(Room* room, Scene* scene) {
                 break;
             }
 
-            draw_textured_quad(solid_uv, vertices);
+            draw_textured_quad(normal_z, solid_uv, vertices);
         }
         else {
             int neighbor_idx = room->connections[d].id;
@@ -308,9 +310,9 @@ void draw_room(Room* room, Scene* scene) {
                 break;
             }
 
-            draw_textured_quad(top_uv, top_vertices);
-            draw_textured_quad(left_uv, left_vertices);
-            draw_textured_quad(right_uv, right_vertices);
+            draw_textured_quad(normal_z, top_uv, top_vertices);
+            draw_textured_quad(normal_z, left_uv, left_vertices);
+            draw_textured_quad(normal_z, right_uv, right_vertices);
         }
     }
 }

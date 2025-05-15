@@ -6,8 +6,8 @@
 #include <stdio.h>
 
 void init_camera(Camera* camera) {
-    camera->position = (Vec3){0.0, 0.0, 1.0};
-    camera->rotation = (Vec3){0.0, 0.0, 0.0};
+    camera->position = (Vec3){0.0, 0.0, 1.25};
+    camera->rotation = (Vec3){0.0, 0.0, 90.0};
     camera->speed = (Vec3){0.0, 0.0, 0.0};
     camera->rotation_speed = (Vec3){0.0, 0.0, 0.0};
     camera->viewport = (Viewport){0, 0, 0, 0};
@@ -48,11 +48,11 @@ void set_view(const Camera* camera) {
         float azimuth = degree_to_radian(camera->rotation.z);
         float elevation = degree_to_radian(-camera->rotation.x);
 
-        float x = camera->orbital_radius * cos(azimuth) * cos(elevation);
-        float y = camera->orbital_radius * sin(azimuth) * cos(elevation);
-        float z = camera->orbital_radius * sin(elevation);
+        float x = camera->orbital_radius * cos(azimuth) * cos(elevation) + camera->position.x;
+        float y = camera->orbital_radius * sin(azimuth) * cos(elevation) + camera->position.y;
+        float z = camera->orbital_radius * sin(elevation) + camera->position.z;
 
-        gluLookAt(x, y, z, -camera->position.x, -camera->position.y, -camera->position.z, 0, 0, 1);
+        gluLookAt(x, y, z, camera->position.x, camera->position.y, camera->position.z, 0, 0, 1);
     }
     else {
         glRotatef(-(camera->rotation.x + 90), 1.0, 0, 0);

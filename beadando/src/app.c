@@ -63,11 +63,11 @@ void init_app(App* app, int width, int height) {
     app->manual.line_height = 1.0f;
     update_manual_display_params(app);
 
+    SDL_SetWindowFullscreen(app->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
     init_camera(&(app->camera));
     reshape(app, width, height);
     init_scene(&(app->scene));
-
-    SDL_SetWindowFullscreen(app->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     app->is_dragging = false;
     app->is_fullscreen = true;
@@ -131,22 +131,16 @@ void handle_app_events(App* app) {
                 app->is_running = false;
                 break;
             case SDL_SCANCODE_W:
-                set_camera_speed(&(app->camera), 1);
+                set_camera_speed(&(app->camera), 1.5);
                 break;
             case SDL_SCANCODE_S:
-                set_camera_speed(&(app->camera), -1);
+                set_camera_speed(&(app->camera), -1.5);
                 break;
             case SDL_SCANCODE_A:
-                set_camera_side_speed(&(app->camera), 1);
+                set_camera_side_speed(&(app->camera), 1.5);
                 break;
             case SDL_SCANCODE_D:
-                set_camera_side_speed(&(app->camera), -1);
-                break;
-            case SDL_SCANCODE_Q:
-                set_camera_vertical_speed(&(app->camera), 1);
-                break;
-            case SDL_SCANCODE_E:
-                set_camera_vertical_speed(&(app->camera), -1);
+                set_camera_side_speed(&(app->camera), -1.5);
                 break;
             case SDL_SCANCODE_F1:
                 handle_manual(app);
@@ -191,10 +185,6 @@ void handle_app_events(App* app) {
             case SDL_SCANCODE_A:
             case SDL_SCANCODE_D:
                 set_camera_side_speed(&(app->camera), 0);
-                break;
-            case SDL_SCANCODE_Q:
-            case SDL_SCANCODE_E:
-                set_camera_vertical_speed(&(app->camera), 0);
                 break;
             default:
                 break;

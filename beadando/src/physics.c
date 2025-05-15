@@ -6,6 +6,20 @@
 #include <stdio.h>
 #include <GL/gl.h>
 
+static void apply_static_collision_damage(dBodyID body, Vec3* vel, float damage_factor) {
+    Object* obj = (Object*)dBodyGetData(body);
+    if (!obj || obj->is_static || !obj->is_active) {
+        return;
+    }
+
+    obj->value -= vec3_length(*vel) * damage_factor;
+    if (obj->value <= 0.0f) {
+        obj->is_active = false;
+        dGeomDestroy(obj->physics_body.geom);
+        dBodyDestroy(obj->physics_body.body);
+    }
+}
+
 static void near_callback(void* data, dGeomID o1, dGeomID o2) {
     PhysicsWorld* pw = (PhysicsWorld*)data;
     dBodyID b1 = dGeomGetBody(o1);
@@ -27,37 +41,24 @@ static void near_callback(void* data, dGeomID o1, dGeomID o2) {
 
     int n = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
     for (int i = 0; i < n; ++i) {
-        if (!isfinite(contact[i].geom.pos[0]) || !isfinite(contact[i].geom.pos[1]) || !isfinite(contact[i].geom.pos[2])) {
+        if (!isfinite(contact[i].geom.pos[0]) ||
+            !isfinite(contact[i].geom.pos[1]) ||
+            !isfinite(contact[i].geom.pos[2])) {
             continue;
         }
 
         dJointID c = dJointCreateContact(pw->world, pw->contact_group, &contact[i]);
         dJointAttach(c, b1, b2);
 
-        Object* obj1 = b1 ? (Object*)dBodyGetData(b1) : NULL;
-        Object* obj2 = b2 ? (Object*)dBodyGetData(b2) : NULL;
-        if (obj1 && !obj1->is_static && obj1->is_active) {
-            Vec3 v1, v2, dv;
-            physics_get_linear_velocity(&obj1->physics_body, &v1);
-            
-            if (b2) {
-                physics_get_linear_velocity(&obj2->physics_body, &v2);
-            }
-            else {
-                v2 = (Vec3){0,0,0};
-            }
+        Vec3 v1 = {0,0,0}, v2 = {0,0,0};
+        if (b1) physics_get_linear_velocity(&((Object*)dBodyGetData(b1))->physics_body, &v1);
+        if (b2) physics_get_linear_velocity(&((Object*)dBodyGetData(b2))->physics_body, &v2);
 
-            dv = vec3_substract(v1, v2);
-            float speed = vec3_length(dv);
-            float damage = speed * 0.1f;  
-            obj1->value -= damage;
-
-            if (obj1->value <= 0.0f) {
-                obj1->is_active = false;
-                
-                dGeomDestroy(obj1->physics_body.geom);
-                dBodyDestroy(obj1->physics_body.body);
-            }
+        if (b1 && !b2) {
+            apply_static_collision_damage(b1, &v1, 0.05f);
+        }
+        else if (b2 && !b1) {
+            apply_static_collision_damage(b2, &v2, 0.05f);
         }
     }
 }
