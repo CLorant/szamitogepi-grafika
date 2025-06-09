@@ -59,19 +59,23 @@ void rotate_model(Model* model, Vec3 rotation) {
     }
 }
 
-void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max) {
+void calculate_mesh_aabb(const Model* model, Vec3* out_min, Vec3* out_max) {
     if (!model || model->n_vertices == 0) {
         *out_min = *out_max = (Vec3){ 0, 0, 0 };
         return;
     }
 
-    Vertex v0 = model->vertices[0];
+    Vertex v0 = model->vertices[1];
     out_min->x = out_max->x = v0.x;
     out_min->y = out_max->y = v0.y;
     out_min->z = out_max->z = v0.z;
 
-    for (int i = 1; i <= model->n_vertices; ++i) {
+    for (int i = 2; i <= model->n_vertices; ++i) {
         Vertex v = model->vertices[i];
+        if (!isfinite(v.x) || !isfinite(v.y) || !isfinite(v.z)) {
+            continue;
+        }
+        
         if (v.x < out_min->x) out_min->x = v.x;
         if (v.y < out_min->y) out_min->y = v.y;
         if (v.z < out_min->z) out_min->z = v.z;
@@ -80,6 +84,16 @@ void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max) {
         if (v.y > out_max->y) out_max->y = v.y;
         if (v.z > out_max->z) out_max->z = v.z;
     }
+}
+
+Vec3 mesh_half_extents(const Model* model) {
+    Vec3 min, max;
+    calculate_mesh_aabb(model, &min, &max);
+    return (Vec3){
+        fmaxf((max.x - min.x)*0.5f, 0.01f),
+        fmaxf((max.y - min.y)*0.5f, 0.01f),
+        fmaxf((max.z - min.z)*0.5f, 0.01f)
+    };
 }
 
 void set_material(const Material* material) {

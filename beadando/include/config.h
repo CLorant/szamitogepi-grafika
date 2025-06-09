@@ -55,6 +55,11 @@ void read_object_config(const char* filename, ObjectConfig* obj_config, int* obj
 char* read_manual(const char* filename);
 
 /**
+ * Find an object config by name.
+ */
+ObjectConfig* find_object_config_by_name(ObjectConfig* configs, int count, const char* name);
+
+/**
  * Verifying configs.
  */
 void print_light_configs(Lighting* light_config, int light_config_count);

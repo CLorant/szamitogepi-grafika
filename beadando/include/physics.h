@@ -123,6 +123,5 @@ void physics_apply_force(PhysicsBody* pb, Vec3 force);
 void physics_apply_torque(PhysicsBody* pb, Vec3 torque);
 
 void physics_wake_up(PhysicsBody* pb);
-void physics_disable_rotation(PhysicsBody* pb);
 
 #endif /* PHYSICS_H */

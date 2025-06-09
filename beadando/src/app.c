@@ -68,6 +68,7 @@ void init_app(App* app, int width, int height) {
     init_camera(&(app->camera));
     reshape(app, width, height);
     init_scene(&(app->scene));
+    init_camera_physics(&app->scene.physics_world, &app->camera);
 
     app->is_dragging = false;
     app->is_fullscreen = true;

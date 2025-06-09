@@ -27,7 +27,12 @@ void rotate_model(Model* model, Vec3 rotation);
 /**
  * Calculate the bounding box of a model.
  */
-void calculate_mesh_aabb(Model* model, Vec3* out_min, Vec3* out_max);
+void calculate_mesh_aabb(const Model* model, Vec3* out_min, Vec3* out_max);
+
+/**
+ * Calculate the half extents of a model's mesh.
+ */
+Vec3 mesh_half_extents(const Model* model);
 
 /**
  * Set the current material.

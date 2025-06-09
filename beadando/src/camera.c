@@ -11,24 +11,53 @@ void init_camera(Camera* camera) {
     camera->speed = (Vec3){0.0, 0.0, 0.0};
     camera->rotation_speed = (Vec3){0.0, 0.0, 0.0};
     camera->viewport = (Viewport){0, 0, 0, 0};
-    
     camera->fov = 60.0;
-
     camera->is_orbital = false;
     camera->orbital_radius = 3.0;
+    camera->half_extents = (Vec3){ 0.25f, 0.25f, camera->position.z * 0.5 };
+    camera->physics_body.body = NULL;
+    camera->physics_body.geom = NULL;
+}
+
+void init_camera_physics(PhysicsWorld* pw, Camera* camera) {
+    physics_create_box(pw, &camera->physics_body, 1.0, camera->position, camera->half_extents);
+    camera->physics_body.user_data = camera;
+    dBodySetGravityMode(camera->physics_body.body, 0);
+    dBodySetFiniteRotationMode(camera->physics_body.body, 1);
+    dBodySetLinearDamping(camera->physics_body.body, 0.1);
+    dBodySetAngularDamping(camera->physics_body.body, 0.9);
+    dBodySetAutoDisableFlag(camera->physics_body.body, 0);
 }
 
 void update_camera(Camera* camera, double time) {
     if (!camera->is_orbital) {
-        double angle = degree_to_radian(camera->rotation.z);
-        double side_angle = degree_to_radian(camera->rotation.z + 90.0);
-        
-        camera->position.x += cos(angle) * camera->speed.y * time;
-        camera->position.y += sin(angle) * camera->speed.y * time;
-        camera->position.x += cos(side_angle) * camera->speed.x * time;
-        camera->position.y += sin(side_angle) * camera->speed.x * time;
+        update_camera_basis(camera);
+
+        Vec3 horizontal_forward = {
+            camera->basis.forward.x,
+            camera->basis.forward.y,
+            0.0f
+        };
+        vec3_normalize(&horizontal_forward);
+
+        Vec3 v_f = vec3_scale(horizontal_forward, camera->speed.y);
+        Vec3 v_s = vec3_scale(camera->basis.right, camera->speed.x);
+        Vec3 world_vel = vec3_add(v_f, v_s);
+
+        dBodySetLinearVel(camera->physics_body.body,
+                          world_vel.x,
+                          world_vel.y,
+                          0.0);
+
+        const dReal* p = dBodyGetPosition(camera->physics_body.body);
+        camera->position.x = p[0];
+        camera->position.y = p[1];
 
         camera->position.z += camera->speed.z * time;
+        dBodySetPosition(camera->physics_body.body,
+                         camera->position.x,
+                         camera->position.y,
+                         camera->position.z);
     }
 
     camera->rotation.y += camera->rotation_speed.y * time;

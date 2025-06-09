@@ -21,6 +21,11 @@ void draw_crosshair(App* app);
 void draw_manual(App* app);
 
 /**
+ * Draw the current / goal values.
+ */
+void draw_extraction_status(const Scene* scene);
+
+/**
  * Draw a line of text.
  */
 void draw_string(GLuint tex, const char* s, float start_x, float start_y, float line_height);

@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include <stdbool.h>
+#include <physics.h>
 
 /**
  * Orientation of the camera.
@@ -37,12 +38,19 @@ typedef struct Camera {
     float aspect_ratio;
     float orbital_radius;
     bool is_orbital;
+    PhysicsBody physics_body;
+    Vec3 half_extents;
 } Camera;
 
 /**
  * Initialize the camera to the start position.
  */
 void init_camera(Camera* camera);
+
+/**
+ * Initialize the camera for physics.
+ */
+void init_camera_physics(PhysicsWorld* pw, Camera* cam);
 
 /**
  * Update the position of the camera.

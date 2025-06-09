@@ -7,12 +7,12 @@
 void draw_crosshair(App* app) {
     float aspect_ratio = app->camera.aspect_ratio;
     float size = 0.02f;
-    
+
     glDisable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -22,15 +22,15 @@ void draw_crosshair(App* app) {
 
     glVertex2f(-size / aspect_ratio, 0.0f);
     glVertex2f(size / aspect_ratio, 0.0f);
-    
+
     glVertex2f(0.0f, -size);
     glVertex2f(0.0f, size);
-    
+
     glEnd();
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    
+
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
 }
@@ -56,6 +56,48 @@ void draw_manual(App* app) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
+}
+
+void draw_extraction_status(const Scene* scene) {
+    const Extraction* extraction = &scene->extraction;
+    if (extraction->font_texture_id == 0) return;
+    if (!extraction->object || !extraction->object[1]) return;
+    
+    int total_value = calculate_total_object_value(scene);
+    int target_value = (total_value * extraction->target_percentage) / 100;
+    int current_value = extraction->collected_value;
+
+    char status_text[32];
+    snprintf(status_text, sizeof(status_text), "$%d/$%d", current_value, target_value);
+
+    glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
+
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    Vec3 pos = extraction->object[1]->position;
+    glTranslatef(pos.x, pos.y - 0.1, pos.z);
+    glRotatef(270.0f, 1.0f, 0.0f, 0.0f);
+    glScalef(0.3f, 0.3f, 0.3f);
+
+    if (extraction->is_completed) {
+        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+    }
+    else {
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    float text_width = strlen(status_text) * 0.5f;
+    draw_string(extraction->font_texture_id, status_text, -text_width * 0.5f, 0.0f, 1.0f);
+
+    glPopMatrix();
+    glPopAttrib();
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void draw_string(GLuint tex, const char* s, float start_x, float start_y, float line_height) {
@@ -101,7 +143,7 @@ void draw_string(GLuint tex, const char* s, float start_x, float start_y, float 
 
 void draw_textured_quad(float normal[3], float tex_coords[4][2], float vertices[4][3]) {
     glBegin(GL_QUADS);
-    
+
     for (int i = 0; i < 4; i++) {
         glNormal3fv(normal);
         glTexCoord2fv(tex_coords[i]);
@@ -125,8 +167,8 @@ void draw_room(Room* room, Scene* scene) {
 
     float v1 = door_h / h;
     float u1, u2;
-    
-    float normal_z[3] = {0, 0, 1};
+
+    float normal_z[3] = { 0, 0, 1 };
     float solid_uv[4][2] = { {0, 0}, {1, 0}, {1, 1}, {0, 1} };
     float top_uv[4][2] = { {0, v1}, {1, v1}, {1, 1}, {0, 1} };
 
@@ -209,7 +251,7 @@ void draw_room(Room* room, Scene* scene) {
                 u1 = (l - half_d) / (2 * l);
                 u2 = (l + half_d) / (2 * l);
             }
-            
+
             float left_uv[4][2] = { {0, 0}, {u1, 0}, {u1, v1}, {0, v1} };
             float right_uv[4][2] = { {u2, 0}, {1, 0}, {1, v1}, {u2, v1} };
             float top_vertices[4][3];

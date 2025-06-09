@@ -6,8 +6,8 @@
       "offset": [0.4, -0.3, 0.1],
       "rotation": [90, 0, 0],
       "scale": [1, 1, 1],
-      "mass": 3.0,
-      "value": 1000,
+      "mass": 2.8,
+      "value": 45,
       "room_name": "final_room",
       "is_static": false
     },
@@ -19,7 +19,7 @@
         "rotation": [90, 0, 0],
         "scale": [0.1, 0.1, 0.1],
         "mass": 8.0,
-        "value": 1000,
+        "value": 65,
         "room_name": "final_room",
         "is_static": false
     },
@@ -30,8 +30,8 @@
         "offset": [-0.8, -0.2, 0.1],
         "rotation": [0, 0, 0],
         "scale": [0.25, 0.25, 0.25],
-        "mass": 2.5,
-        "value": 1000,
+        "mass": 1.8,
+        "value": 35,
         "room_name": "final_room",
         "is_static": false
     },
@@ -43,7 +43,7 @@
         "rotation": [0, 0, 0],
         "scale": [0.15, 0.15, 0.15],
         "mass": 1.0,
-        "value": 1000,
+        "value": 120,
         "room_name": "disco_room",
         "is_static": false
     },
@@ -54,10 +54,102 @@
         "offset": [-0.2, 0.0, 0.1],
         "rotation": [0, 0, 0],
         "scale": [1, 1, 1],
-        "mass": 3.5,
-        "value": 1000,
+        "mass": 7.5,
+        "value": 75,
         "room_name": "disco_room",
         "is_static": false
+    },
+    {
+        "name": "football",
+        "model_path": "assets/models/football.obj",
+        "texture_path": "assets/textures/football.jpg",
+        "offset": [-0.2, 0.0, 0.1],
+        "rotation": [0, 0, 0],
+        "scale": [2.5, 2.5, 2.5],
+        "mass": 0.8,
+        "value": 25,
+        "room_name": "final_room",
+        "is_static": false
+    },
+    {
+        "name": "pan",
+        "model_path": "assets/models/pan.obj",
+        "texture_path": "assets/textures/metal_rough.jpg",
+        "offset": [0.9, 0.9, 0.1],
+        "rotation": [90, 0, 0],
+        "scale": [0.01, 0.01, 0.01],
+        "mass": 1.2,
+        "value": 40,
+        "room_name": "disco_room",
+        "is_static": false
+    },
+    {
+        "name": "barrel1",
+        "model_path": "assets/models/barrel.obj",
+        "texture_path": "assets/textures/wood_rough.jpg",
+        "offset": [0.8, -0.8, 0.0],
+        "rotation": [90, 0, 0],
+        "scale": [1, 1, 1],
+        "mass": 12.5,
+        "value": 80,
+        "room_name": "start_room",
+        "is_static": false
+    },
+    {
+        "name": "barrel2",
+        "model_path": "assets/models/barrel.obj",
+        "texture_path": "assets/textures/wood_rough.jpg",
+        "offset": [0.6, -0.8, 0.0],
+        "rotation": [90, 0, 0],
+        "scale": [1, 1, 1],
+        "mass": 12.5,
+        "value": 80,
+        "room_name": "start_room",
+        "is_static": false
+    },
+    {
+        "name": "barrel3",
+        "model_path": "assets/models/barrel.obj",
+        "texture_path": "assets/textures/wood_rough.jpg",
+        "offset": [0.8, -0.6, 0.0],
+        "rotation": [90, 0, 0],
+        "scale": [1, 1, 1],
+        "mass": 12.5,
+        "value": 80,
+        "room_name": "start_room",
+        "is_static": false
+    },
+    {
+        "name": "barrel4",
+        "model_path": "assets/models/barrel.obj",
+        "texture_path": "assets/textures/wood_rough.jpg",
+        "offset": [0.8, -0.8, 0.0],
+        "rotation": [90, 0, 0],
+        "scale": [1, 1, 1],
+        "mass": 12.5,
+        "value": 80,
+        "room_name": "final_room",
+        "is_static": false
+    },
+    {
+        "name": "extraction_platform",
+        "model_path": "assets/models/extraction.obj",
+        "texture_path": "assets/textures/extraction.jpg",
+        "offset": [0.625, 0.625, 0.035],
+        "rotation": [90, 0, 0],
+        "scale": [1.25, 1.25, 1.25],
+        "room_name": "start_room",
+        "is_static": true
+    },
+    {
+        "name": "extraction_screen",
+        "model_path": "assets/models/tv.obj",
+        "texture_path": "assets/textures/tv.jpg",
+        "offset": [0.625, 0.9375, 2.035],
+        "rotation": [90, 0, 0],
+        "scale": [4.0, 4.0, 4.0],
+        "room_name": "start_room",
+        "is_static": true
     },
     {
         "name": "lamp1",
@@ -77,6 +169,16 @@
         "rotation": [90, 0, 0],
         "scale": [1.25, 1.25, 1.25],
         "room_name": "final_room",
+        "is_static": true
+    },
+    {
+        "name": "discoball",
+        "model_path": "assets/models/discoball.obj",
+        "texture_path": "assets/textures/plaster_light.jpg",
+        "offset": [0.0, 0.0, 3.0],
+        "rotation": [90, 0, 0],
+        "scale": [0.025, 0.025, 0.025],
+        "room_name": "disco_room",
         "is_static": true
     },
     {
@@ -110,13 +212,23 @@
         "is_static": true
     },
     {
-        "name": "discoball",
-        "model_path": "assets/models/discoball.obj",
-        "texture_path": "assets/textures/plaster_light.jpg",
-        "offset": [0.0, 0.0, 3.0],
+        "name": "shelf",
+        "model_path": "assets/models/shelf.obj",
+        "texture_path": "assets/textures/wood_med.jpg",
+        "offset": [-1.0, -0.8, 0.0],
+        "rotation": [90, 0, 180],
+        "scale": [1, 1, 1],
+        "room_name": "start_room",
+        "is_static": true
+    },
+    {
+        "name": "sofa",
+        "model_path": "assets/models/sofa.obj",
+        "texture_path": "assets/textures/red_fabric.jpg",
+        "offset": [-0.8, 0.8, 0.0],
         "rotation": [90, 0, 0],
-        "scale": [0.025, 0.025, 0.025],
-        "room_name": "disco_room",
+        "scale": [1, 1, 1],
+        "room_name": "final_room",
         "is_static": true
     }
 ]

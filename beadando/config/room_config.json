@@ -2,7 +2,7 @@
     {
         "name": "start_room",
         "dimension": [7.0, 7.0, 4.0],
-        "floor_tex": "assets/textures/plywood.jpg",
+        "floor_tex": "assets/textures/marble_tile_dark.jpg",
         "ceiling_tex": "assets/textures/plaster_light.jpg",
         "wall_tex": "assets/textures/plaster_gray.jpg",
         "connections": [
@@ -12,9 +12,9 @@
     {
         "name": "ns_corridor",
         "dimension": [2.0, 6.0, 2.5],
-        "floor_tex": "assets/textures/wood_med.jpg",
+        "floor_tex": "assets/textures/marble_tile_lbrown.jpg",
         "ceiling_tex": "assets/textures/plaster_light.jpg",
-        "wall_tex": "assets/textures/concrete_dark.jpg",
+        "wall_tex": "assets/textures/roman_brick.jpg",
         "connections": [
             { "room": "start_room",  "dir": "south" },
             { "room": "final_room",  "dir": "north" },
@@ -24,9 +24,9 @@
     {
         "name": "e_corridor",
         "dimension": [6.0, 2.0, 2.5],
-        "floor_tex": "assets/textures/wood_med.jpg",
+        "floor_tex": "assets/textures/marble_tile_lbrown.jpg",
         "ceiling_tex": "assets/textures/plaster_light.jpg",
-        "wall_tex": "assets/textures/concrete_dark.jpg",
+        "wall_tex": "assets/textures/decorative_tile.jpg",
         "connections": [
             { "room": "ns_corridor",  "dir": "west" },
             { "room": "disco_room",  "dir": "east" }
@@ -35,7 +35,7 @@
     {
         "name": "disco_room",
         "dimension": [4.0, 4.0, 4.0],
-        "floor_tex": "assets/textures/wood_rough.jpg",
+        "floor_tex": "assets/textures/stone_tile_dark.jpg",
         "ceiling_tex": "assets/textures/plaster_light.jpg",
         "wall_tex": "assets/textures/brick_tan.jpg",
         "connections": [
@@ -47,7 +47,7 @@
         "dimension": [10.0, 10.0, 4.0],
         "floor_tex": "assets/textures/plywood.jpg",
         "ceiling_tex": "assets/textures/plaster_light.jpg",
-        "wall_tex": "assets/textures/plaster_brown.jpg",
+        "wall_tex": "assets/textures/plaster_gray.jpg",
         "connections": [
             { "room": "ns_corridor", "dir": "south" }
         ]

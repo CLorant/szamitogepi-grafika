@@ -7,16 +7,33 @@
 #include <GL/gl.h>
 
 static void apply_static_collision_damage(dBodyID body, Vec3* vel, float damage_factor) {
-    Object* obj = (Object*)dBodyGetData(body);
-    if (!obj || obj->is_static || !obj->is_active) {
+    PhysicsBody* pb = (PhysicsBody*)dBodyGetData(body);
+    if (!pb || !pb->user_data) return;
+    
+    Object* obj = (Object*)pb->user_data;
+    if (!obj || obj->is_static || !obj->is_active || !obj->is_interacted) {
         return;
     }
 
-    obj->value -= vec3_length(*vel) * damage_factor;
+    float velocity = vec3_length(*vel);
+
+    if (velocity > 0.5f && !obj->in_extraction) {
+        float velocity_factor = velocity - 0.5f;
+        float damage_percentage = fminf(0.01f * velocity_factor * damage_factor, 0.05f);
+        float damage_amount = obj->value * damage_percentage;
+        obj->value -= damage_amount;
+    }
+
     if (obj->value <= 0.0f) {
         obj->is_active = false;
-        dGeomDestroy(obj->physics_body.geom);
-        dBodyDestroy(obj->physics_body.body);
+        if (obj->physics_body.geom) {
+            dGeomDisable(obj->physics_body.geom);
+        }
+        if (obj->physics_body.body) {
+            dBodyDisable(obj->physics_body.body);
+        }
+        dBodySetData(obj->physics_body.body, NULL);
+        dGeomSetData(obj->physics_body.geom, NULL);
     }
 }
 
@@ -50,14 +67,17 @@ static void near_callback(void* data, dGeomID o1, dGeomID o2) {
         dJointID c = dJointCreateContact(pw->world, pw->contact_group, &contact[i]);
         dJointAttach(c, b1, b2);
 
+        PhysicsBody* pb1 = b1 ? (PhysicsBody*)dBodyGetData(b1) : NULL;
+        PhysicsBody* pb2 = b2 ? (PhysicsBody*)dBodyGetData(b2) : NULL;
+        
         Vec3 v1 = {0,0,0}, v2 = {0,0,0};
-        if (b1) physics_get_linear_velocity(&((Object*)dBodyGetData(b1))->physics_body, &v1);
-        if (b2) physics_get_linear_velocity(&((Object*)dBodyGetData(b2))->physics_body, &v2);
+        if (pb1) physics_get_linear_velocity(pb1, &v1);
+        if (pb2) physics_get_linear_velocity(pb2, &v2);
 
-        if (b1 && !b2) {
+        if (pb1 && !pb2) {
             apply_static_collision_damage(b1, &v1, 0.05f);
         }
-        else if (b2 && !b1) {
+        else if (pb2 && !pb1) {
             apply_static_collision_damage(b2, &v2, 0.05f);
         }
     }
@@ -134,6 +154,9 @@ void physics_create_box(PhysicsWorld* pw, PhysicsBody* pb, double mass, Vec3 pos
         half_extents.y * 2,
         half_extents.z * 2);
     dGeomSetBody(pb->geom, pb->body);
+    dBodySetData(pb->body, pb);
+    dGeomSetData(pb->geom, pb);
+
     pb->is_active = true;
 }
 
@@ -436,23 +459,4 @@ void physics_wake_up(PhysicsBody* pb) {
     if (!pb || !pb->body) return;
     dBodyEnable(pb->body);
     pb->is_sleeping = false;
-}
-
-void physics_disable_rotation(PhysicsBody* pb) {
-    if (!pb || !pb->body) return;
-    dBodySetFiniteRotationMode(pb->body, 1);
-    dBodySetFiniteRotationAxis(pb->body, 0, 0, 1);
-    dBodySetAngularVel(pb->body, 0, 0, 0);
-
-    dJointID j = dJointCreateAMotor(dBodyGetWorld(pb->body), 0);
-    dJointAttach(j, pb->body, 0);
-    dJointSetAMotorMode(j, dAMotorEuler);
-    dJointSetAMotorNumAxes(j, 3);
-    dJointSetAMotorAxis(j, 0, 1, 1, 0, 0);
-    dJointSetAMotorAxis(j, 1, 1, 0, 1, 0);
-    dJointSetAMotorAxis(j, 2, 1, 0, 0, 1);
-    for (int axis = 0; axis < 3; ++axis) {
-        dJointSetAMotorParam(j, dParamLoStop + 2 * axis, 0);
-        dJointSetAMotorParam(j, dParamHiStop + 2 * axis, 0);
-    }
 }

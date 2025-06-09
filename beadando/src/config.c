@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-static json_object* parse_json_file(const char* filename) {
+json_object* parse_json_file(const char* filename) {
     FILE* fp = fopen(filename, "r");
     if (!fp) {
         printf("[ERROR] Cannot open %s\n", filename);
@@ -27,7 +27,7 @@ static json_object* parse_json_file(const char* filename) {
     return root;
 }
 
-static void json_get_string_field(json_object* obj, const char* field, char* dest, size_t dest_size) {
+void json_get_string_field(json_object* obj, const char* field, char* dest, size_t dest_size) {
     json_object* field_obj = json_object_object_get(obj, field);
     if (field_obj) {
         const char* str = json_object_get_string(field_obj);
@@ -38,22 +38,22 @@ static void json_get_string_field(json_object* obj, const char* field, char* des
     }
 }
 
-static float json_get_float_field(json_object* obj, const char* field, float default_value) {
+float json_get_float_field(json_object* obj, const char* field, float default_value) {
     json_object* field_obj = json_object_object_get(obj, field);
     return field_obj ? (float)json_object_get_double(field_obj) : default_value;
 }
 
-static int json_get_int_field(json_object* obj, const char* field, int default_value) {
+int json_get_int_field(json_object* obj, const char* field, int default_value) {
     json_object* field_obj = json_object_object_get(obj, field);
     return field_obj ? json_object_get_int(field_obj) : default_value;
 }
 
-static bool json_get_bool_field(json_object* obj, const char* field, bool default_value) {
+bool json_get_bool_field(json_object* obj, const char* field, bool default_value) {
     json_object* field_obj = json_object_object_get(obj, field);
     return field_obj ? json_object_get_boolean(field_obj) : default_value;
 }
 
-static void json_get_vec3_field(json_object* obj, const char* field, Vec3* vec) {
+void json_get_vec3_field(json_object* obj, const char* field, Vec3* vec) {
     json_object* array = json_object_object_get(obj, field);
     if (array && json_object_is_type(array, json_type_array) && 
         json_object_array_length(array) >= 3) {
@@ -63,7 +63,7 @@ static void json_get_vec3_field(json_object* obj, const char* field, Vec3* vec) 
     }
 }
 
-static void json_get_vec4_field(json_object* obj, const char* field, Vec4* vec) {
+void json_get_vec4_field(json_object* obj, const char* field, Vec4* vec) {
     json_object* array = json_object_object_get(obj, field);
     if (array && json_object_is_type(array, json_type_array) && 
         json_object_array_length(array) >= 4) {
@@ -74,7 +74,7 @@ static void json_get_vec4_field(json_object* obj, const char* field, Vec4* vec) 
     }
 }
 
-static void json_get_rgba_field(json_object* obj, const char* field, ColorRGBA* color) {
+void json_get_rgba_field(json_object* obj, const char* field, ColorRGBA* color) {
     json_object* array = json_object_object_get(obj, field);
     if (array && json_object_is_type(array, json_type_array) && 
         json_object_array_length(array) >= 4) {
@@ -85,7 +85,7 @@ static void json_get_rgba_field(json_object* obj, const char* field, ColorRGBA* 
     }
 }
 
-static void parse_room_connections(json_object* item, RoomConfig* cfg) {
+void parse_room_connections(json_object* item, RoomConfig* cfg) {
     json_object* conns = json_object_object_get(item, "connections");
     if (!conns || !json_object_is_type(conns, json_type_array)) return;
 
@@ -292,6 +292,15 @@ char* read_manual(const char* filename) {
     free(lines);
     fclose(file);
     return result;
+}
+
+ObjectConfig* find_object_config_by_name(ObjectConfig* configs, int count, const char* name) {
+    for (int i = 0; i < count; i++) {
+        if (strcmp(configs[i].name, name) == 0) {
+            return &configs[i];
+        }
+    }
+    return NULL;
 }
 
 void print_room_configs(RoomConfig* room_config, int room_count) {
